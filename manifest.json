@@ -1,0 +1,16 @@
+{
+  "name": "ملعب رمضان VIP",
+  "short_name": "الملعب",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#0a0e17",
+  "theme_color": "#d4af37",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/5323/5323980.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
