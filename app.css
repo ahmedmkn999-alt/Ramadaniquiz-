@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+
+body {
+    font-family: 'Cairo', sans-serif;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.glass-panel {
+    background: rgba(20, 24, 39, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+}
+
+.gold-btn {
+    background: linear-gradient(135deg, #FFD700, #DAA520);
+    color: #000;
+}
+
+.gold-btn:active {
+    transform: scale(0.96);
+}
+
+.view-screen {
+    display: none;
+    animation: fadeIn 0.4s ease-in-out;
+}
+
+.view-screen.active {
+    display: flex;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* دوائر الخريطة */
+.round-node {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: 1.2rem;
+    position: relative;
+    z-index: 10;
+    transition: all 0.3s ease;
+}
+
+.round-locked { background: #1f2937; color: #4b5563; border: 3px solid #374151; }
+.round-played { background: #065f46; color: #34d399; border: 3px solid #10b981; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+.round-active { background: linear-gradient(135deg, #d4af37, #b8860b); color: #000; border: 3px solid #fff; box-shadow: 0 0 20px rgba(212, 175, 55, 0.8); cursor: pointer; animation: pulse 2s infinite; }
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+    70% { transform: scale(1.1); box-shadow: 0 0 0 15px rgba(212, 175, 55, 0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+
+.option-btn {
+    background: rgba(17, 24, 39, 0.9);
+    border: 1px solid #374151;
+    color: white;
+    padding: 15px;
+    border-radius: 12px;
+    font-weight: bold;
+    text-align: right;
+    transition: 0.2s;
+}
+
+.option-btn:active { background: #374151; }
+.option-btn.disabled { opacity: 0.3; pointer-events: none; }
