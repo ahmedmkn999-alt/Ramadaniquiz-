@@ -2,33 +2,67 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>الجولة الحالية</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ملعب رمضان - الاختبار</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        body { font-family: 'Cairo', sans-serif; background: #0a0e17; color: white; overflow: hidden; }
-        .opt-btn { background: #161e2d; border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.2s; text-align: right; width: 100%; padding: 20px; border-radius: 20px; font-weight: bold; margin-bottom: 10px; }
-        .opt-btn:active { background: #d4af37; color: black; transform: scale(0.98); }
+        body { font-family: 'Cairo', sans-serif; background: #0a0e17; color: white; overflow: hidden; -webkit-user-select: none; user-select: none; }
+        .answer-btn { background: #161e2d; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s; cursor: pointer; }
+        .answer-btn:active { transform: scale(0.98); }
+        .correct { background: #10b981 !important; border-color: #059669; }
+        .wrong { background: #ef4444 !important; border-color: #b91c1c; }
+        .timer-bar { height: 4px; background: #d4af37; transition: width 1s linear; width: 100%; }
+        /* شاشة النتيجة */
+        #result-overlay { display: none; background: rgba(0,0,0,0.9); z-index: 100; position: fixed; inset: 0; align-items: center; justify-content: center; }
     </style>
 </head>
-<body class="p-6">
-    <div id="quiz-container" class="max-w-md mx-auto h-screen flex flex-col justify-center">
-        <div id="loading" class="text-center">جاري تحميل التحدي... ⏳</div>
-        
-        <div id="game-ui" class="hidden">
-            <div class="mb-10">
-                <div class="flex justify-between text-[10px] text-gray-400 font-bold mb-2">
-                    <span id="q-progress">سؤال 1 من 15</span>
-                    <span id="score-live">نقاطك: 0</span>
+<body>
+
+    <div class="fixed top-0 left-0 w-full z-50">
+        <div id="timer-line" class="timer-bar"></div>
+    </div>
+
+    <div class="max-w-md mx-auto p-6 flex flex-col h-screen">
+        <div class="flex justify-between items-center mb-8 mt-4">
+            <div class="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                سؤال <span id="q-index" class="text-yellow-500 text-lg">1</span> / 15
+            </div>
+            <div class="flex gap-2">
+                <button id="freeze-btn" onclick="useFreeze()" class="bg-blue-600/20 text-blue-400 p-2 rounded-lg border border-blue-500/20 text-[10px]">
+                    <i class="fas fa-snowflake"></i> <span id="freeze-status">1</span>
+                </button>
+                <button id="delete-btn" onclick="use5050()" class="bg-purple-600/20 text-purple-400 p-2 rounded-lg border border-purple-500/20 text-[10px]">
+                    <i class="fas fa-cut"></i> <span id="delete-status">1</span>
+                </button>
+            </div>
+        </div>
+
+        <div id="question-container" class="flex-1 flex flex-col justify-center">
+            <h1 id="question-text" class="text-xl font-black text-center mb-10 leading-relaxed">جاري تحميل السؤال...</h1>
+            
+            <div id="answers-grid" class="grid grid-cols-1 gap-3">
                 </div>
-                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
-                    <div id="bar" class="bg-yellow-500 h-full transition-all duration-500" style="width: 0%"></div>
-                </div>
+        </div>
+    </div>
+
+    <div id="result-overlay">
+        <div class="bg-[#161e2d] w-4/5 p-8 rounded-3xl border border-yellow-500/30 text-center">
+            <div class="w-20 h-20 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_30px_rgba(212,175,55,0.4)]">
+                <i class="fas fa-trophy text-black text-3xl"></i>
+            </div>
+            <h2 class="text-2xl font-black mb-1">انتهت الجولة!</h2>
+            <p class="text-gray-400 text-sm mb-6">لقد قدمت أداءً رائعاً</p>
+            
+            <div class="bg-black/40 p-4 rounded-2xl mb-6 border border-white/5">
+                <p class="text-xs text-gray-500">نقاطك المكتسبة</p>
+                <p id="final-score" class="text-4xl font-black text-yellow-500">0</p>
             </div>
 
-            <h2 id="question-text" class="text-xl font-black mb-10 leading-relaxed text-center">...</h2>
-            <div id="options-box"></div>
+            <button onclick="window.location.href='index.html'" class="w-full bg-yellow-500 text-black font-black py-3 rounded-xl shadow-lg">
+                العودة للرئيسية
+            </button>
         </div>
     </div>
 
@@ -39,62 +73,159 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const day = urlParams.get('day');
+        let currentQ = 0;
+        let score = 0;
         let questions = [];
-        let currentIdx = 0;
-        let points = 0;
+        let timer;
+        let timeLeft = 15;
+        let isPaused = false;
+        let canAnswer = true;
+        let hasUsed5050 = false;
+        let hasUsedFreeze = false;
 
-        // سحب الأسئلة من النسخة الأولى (نسخة 1)
-        db.collection("quizzes_pool").doc(`day_${day}`).get().then(doc => {
-            if(doc.exists && doc.data().variations && doc.data().variations[0]) {
-                questions = doc.data().variations[0].questions;
-                document.getElementById('loading').classList.add('hidden');
-                document.getElementById('game-ui').classList.remove('hidden');
-                showQuestion();
-            } else { alert("الجولة دي لسه مفيهاش أسئلة!"); window.location.href='index.html'; }
-        });
+        // منع الخروج أو الرجوع
+        history.pushState(null, null, location.href);
+        window.onpopstate = () => history.go(1);
+        window.oncontextmenu = (e) => e.preventDefault(); // منع كليك يمين
 
-        function showQuestion() {
-            const q = questions[currentIdx];
-            document.getElementById('question-text').innerText = q.q;
-            document.getElementById('q-progress').innerText = `سؤال ${currentIdx+1} من ${questions.length}`;
-            document.getElementById('bar').style.width = `${((currentIdx+1)/questions.length)*100}%`;
+        async function loadQuiz() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const dayId = urlParams.get('day');
             
-            const box = document.getElementById('options-box');
-            box.innerHTML = "";
-            q.options.forEach((opt, i) => {
-                box.innerHTML += `<button onclick="handleAnswer(${i})" class="opt-btn">${opt}</button>`;
-            });
-        }
+            // التأكد إن الكويز مفعل من الأدمن
+            const statusDoc = await db.collection("settings").doc("global_status").get();
+            const global = statusDoc.data();
+            
+            if (global.currentDay != dayId || global.status !== 'active') {
+                alert("هذه الجولة غير مفعلة حالياً!");
+                window.location.href = 'index.html';
+                return;
+            }
 
-        function handleAnswer(choice) {
-            if(choice === questions[currentIdx].correctIndex) points++;
-            document.getElementById('score-live').innerText = `نقاطك: ${points}`;
-
-            if(currentIdx < questions.length - 1) {
-                currentIdx++;
+            const snap = await db.collection("quizzes").doc(`day_${dayId}`).collection("questions").get();
+            questions = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            if(questions.length > 0) {
                 showQuestion();
-            } else {
-                saveResult();
             }
         }
 
-        function saveResult() {
-            const pass = localStorage.getItem('user_pass');
-            db.collection("users").where("password", "==", pass).get().then(snap => {
-                const userDoc = snap.docs[0];
-                // 1. زيادة نقاط اللاعب
-                userDoc.ref.update({ score: firebase.firestore.FieldValue.increment(points) });
-                // 2. تسجيل إن الجولة دي خلصت عشان علامة الصح
-                userDoc.ref.collection("game_logs").doc(`day_${day}`).set({
-                    day: parseInt(day), score: points, time: Date.now()
-                }).then(() => {
-                    alert(`مبروك! جمعت ${points} نقطة في جولة اليوم.`);
-                    window.location.href = 'index.html';
-                });
+        function startTimer() {
+            clearInterval(timer);
+            timeLeft = 15;
+            document.getElementById('timer-line').style.width = '100%';
+            
+            timer = setInterval(() => {
+                if (!isPaused) {
+                    timeLeft--;
+                    document.getElementById('timer-line').style.width = (timeLeft/15 * 100) + '%';
+                    
+                    if (timeLeft <= 0) {
+                        handleAnswer(null); // وقت خلص = غلط
+                    }
+                }
+            }, 1000);
+        }
+
+        function showQuestion() {
+            canAnswer = true;
+            isPaused = false;
+            const q = questions[currentQ];
+            document.getElementById('q-index').innerText = currentQ + 1;
+            document.getElementById('question-text').innerText = q.text;
+            
+            const grid = document.getElementById('answers-grid');
+            grid.innerHTML = "";
+            
+            q.options.forEach((opt, i) => {
+                grid.innerHTML += `
+                    <button onclick="handleAnswer(${i})" class="answer-btn p-4 rounded-2xl text-right text-sm font-bold flex justify-between items-center group">
+                        <span>${opt}</span>
+                        <div class="w-5 h-5 border-2 border-white/10 rounded-full group-hover:border-yellow-500"></div>
+                    </button>`;
+            });
+            startTimer();
+        }
+
+        function useFreeze() {
+            if (hasUsedFreeze || !canAnswer) return;
+            hasUsedFreeze = true;
+            isPaused = true;
+            document.getElementById('freeze-status').innerText = "0";
+            document.getElementById('freeze-btn').style.opacity = "0.3";
+            
+            // تجميد لمدة 10 ثواني
+            setTimeout(() => { isPaused = false; }, 10000);
+        }
+
+        function use5050() {
+            if (hasUsed5050 || !canAnswer) return;
+            hasUsed5050 = true;
+            document.getElementById('delete-status').innerText = "0";
+            document.getElementById('delete-btn').style.opacity = "0.3";
+            
+            const q = questions[currentQ];
+            const btns = document.querySelectorAll('.answer-btn');
+            let removed = 0;
+            
+            btns.forEach((btn, index) => {
+                if (index !== q.correct && removed < 2) {
+                    btn.style.visibility = 'hidden';
+                    removed++;
+                }
             });
         }
+
+        async function handleAnswer(index) {
+            if (!canAnswer) return;
+            canAnswer = false;
+            clearInterval(timer);
+            
+            const q = questions[currentQ];
+            const btns = document.querySelectorAll('.answer-btn');
+
+            if (index === q.correct) {
+                btns[index].classList.add('correct');
+                score++;
+            } else if (index !== null) {
+                btns[index].classList.add('wrong');
+                btns[q.correct].classList.add('correct');
+            } else {
+                btns[q.correct].classList.add('correct'); // الوقت خلص
+            }
+
+            setTimeout(() => {
+                currentQ++;
+                if (currentQ < questions.length) {
+                    showQuestion();
+                } else {
+                    finishQuiz();
+                }
+            }, 1500);
+        }
+
+        async function finishQuiz() {
+            const userPass = localStorage.getItem('user_pass');
+            const userSnap = await db.collection("users").where("password", "==", userPass).get();
+            const userDoc = userSnap.docs[0];
+            
+            // تحديث السكور
+            await db.collection("users").doc(userDoc.id).update({
+                score: firebase.firestore.FieldValue.increment(score)
+            });
+
+            // تسجيل اللوج عشان ميعيدش الجولة
+            const dayId = new URLSearchParams(window.location.search).get('day');
+            await db.collection("users").doc(userDoc.id).collection("game_logs").doc(`day_${dayId}`).set({
+                score: score,
+                date: new Date()
+            });
+
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('result-overlay').style.display = 'flex';
+        }
+
+        loadQuiz();
     </script>
 </body>
 </html>
