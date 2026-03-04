@@ -8,53 +8,56 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        body { font-family: 'Cairo', sans-serif; background: #0a0e17; color: white; }
-        #install-guard { display: none; position: fixed; inset: 0; background: #0a0e17; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+        body { font-family: 'Cairo', sans-serif; background: #0a0e17; color: white; overflow-x: hidden; }
+        
+        /* شاشة إجبار التثبيت */
+        #install-guard { display: none; position: fixed; inset: 0; background: #0a0e17; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px; }
+        
         .premium-card { background: #161e2d; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; }
-        .nav-btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; text-align: center; cursor: pointer; }
-        .nav-btn.active { background: linear-gradient(to right, #d4af37, #f59e0b); color: black; }
-        .round-item { background: #161e2d; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; padding: 20px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+        .nav-btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .nav-btn.active { background: #d4af37; color: black; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); }
         .active-glow { border: 2px solid #d4af37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
     </style>
 </head>
 <body>
 
     <div id="install-guard">
-        <img src="https://i.postimg.cc/QN7YYDZb/1772330473684.png" class="w-32 h-32 rounded-3xl mb-8 shadow-2xl">
-        <h1 class="text-2xl font-black text-yellow-500 mb-4">ثبت تطبيق الملعب!</h1>
-        <p class="text-gray-400 text-sm mb-10">عشان تشارك في التحديات لازم تثبت الموقع كـ تطبيق.</p>
-        <div id="ios-steps" class="hidden text-right bg-white/5 p-6 rounded-2xl w-full">
-            <p class="text-xs mb-4">لأجهزة الآيفون:</p>
-            <p class="text-sm mb-2">1. اضغط على زر <i class="fas fa-share-square text-blue-400 mx-1"></i> (المشاركة)</p>
-            <p class="text-sm">2. اختر <i class="fas fa-plus-square mx-1"></i> إضافة للشاشة الرئيسية.</p>
+        <img src="https://i.postimg.cc/QN7YYDZb/1772330473684.png" class="w-32 h-32 rounded-3xl mb-8 border-2 border-yellow-500 shadow-2xl">
+        <h1 class="text-2xl font-black text-yellow-500 mb-4">ثبّت التطبيق للمشاركة!</h1>
+        <p class="text-gray-400 text-sm mb-10 px-6">عشان تقدر تلعب وتجمع نقاط، لازم تضغط على خيارات المتصفح وتختار "إضافة إلى الشاشة الرئيسية".</p>
+        
+        <div id="ios-info" class="hidden bg-white/5 p-5 rounded-2xl w-full text-right border border-white/10">
+            <p class="text-xs text-yellow-500 mb-3 font-bold">خطوات التثبيت للآيفون (Safari):</p>
+            <p class="text-sm mb-2">1. اضغط على زر المشاركة <i class="fas fa-share-square text-blue-400"></i></p>
+            <p class="text-sm">2. اختر "إضافة إلى الشاشة الرئيسية" <i class="fas fa-plus-square"></i></p>
         </div>
-        <button id="and-btn" class="hidden bg-yellow-500 text-black font-black px-10 py-4 rounded-2xl shadow-lg">تثبيت التطبيق 📲</button>
+        <button id="android-install-btn" class="hidden bg-yellow-500 text-black font-black px-10 py-4 rounded-2xl shadow-lg active:scale-95">تثبيت الآن 📲</button>
     </div>
 
-    <div id="main-app" class="max-w-md mx-auto p-4 opacity-0 transition-opacity">
-        
+    <div id="main-app" class="max-w-md mx-auto p-4 opacity-0 transition-opacity duration-700">
         <div class="premium-card p-4 flex justify-between items-center mb-6">
             <div class="bg-black/40 px-4 py-2 rounded-xl text-center border border-white/5">
                 <p class="text-[10px] text-gray-400">نقاطك</p>
-                <p id="h-score" class="text-xl font-black text-yellow-500">0</p>
+                <p id="player-score" class="text-xl font-black text-yellow-500">0</p>
             </div>
-            <div class="text-right">
-                <h2 id="h-name" class="font-black text-sm">...</h2>
-                <p id="h-team" class="text-[10px] text-blue-400 font-bold">...</p>
+            <div class="text-right flex-1 px-4">
+                <h2 id="player-name" class="font-black text-sm">...</h2>
+                <p id="player-team" class="text-[10px] text-blue-400 font-bold">...</p>
             </div>
-            <img src="https://i.postimg.cc/QN7YYDZb/1772330473684.png" class="w-12 h-12 rounded-xl border border-yellow-500">
+            <img src="https://i.postimg.cc/QN7YYDZb/1772330473684.png" class="w-12 h-12 rounded-xl border border-yellow-500 shadow-lg">
         </div>
 
         <div class="flex gap-2 mb-6 bg-[#161e2d] p-1.5 rounded-2xl">
-            <div class="nav-btn active" id="btn-map" onclick="toggleView('map')">🗺️ الخريطة</div>
-            <div class="nav-btn" id="btn-rank" onclick="toggleView('rank')">🏆 المجموعة</div>
+            <div class="nav-btn active" id="btn-map" onclick="switchView('map')">🗺️ الخريطة</div>
+            <div class="nav-btn" id="btn-rank" onclick="switchView('rank')">🏆 المجموعة</div>
         </div>
 
-        <div id="view-map" class="space-y-3"></div>
+        <div id="view-map" class="space-y-3">
+            </div>
 
-        <div id="view-rank" class="hidden space-y-2">
-            <h3 class="text-center text-gray-500 font-bold text-[10px] mb-4">ترتيب مجموعتك</h3>
-            <div id="rank-list"></div>
+        <div id="view-rank" class="hidden">
+            <h3 class="text-center text-gray-500 font-bold text-[10px] mb-4">ترتيب مجموعتك الحالية</h3>
+            <div id="rank-list" class="space-y-2"></div>
         </div>
     </div>
 
@@ -65,98 +68,109 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // فحص التثبيت
-        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+        // 1. نظام كشف التثبيت
+        const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         if (!isStandalone) {
             document.getElementById('install-guard').style.display = 'flex';
-            if(/iPad|iPhone|iPod/.test(navigator.userAgent)) document.getElementById('ios-steps').classList.remove('hidden');
-            else document.getElementById('and-btn').classList.remove('hidden');
+            if(/iPad|iPhone|iPod/.test(navigator.userAgent)) document.getElementById('ios-info').classList.remove('hidden');
+            else document.getElementById('android-install-btn').classList.remove('hidden');
         } else {
             document.getElementById('main-app').classList.remove('opacity-0');
-            startApp();
+            initApp();
         }
 
         let userPass = localStorage.getItem('user_pass');
-        let currentUser = null;
+        let userData = null;
         let playedRounds = [];
 
-        function startApp() {
+        function initApp() {
             if(!userPass) return window.location.href = 'login.html';
-            
-            // سحب بيانات اللاعب و سجل اللعب
-            db.collection("users").where("password", "==", userPass).onSnapshot(snap => {
-                const doc = snap.docs[0];
-                currentUser = { id: doc.id, ...doc.data() };
-                document.getElementById('h-name').innerText = currentUser.name;
-                document.getElementById('h-team').innerText = currentUser.team;
-                document.getElementById('h-score').innerText = currentUser.score;
 
-                // سحب الجولات اللي خلصت
-                db.collection("users").doc(currentUser.id).collection("game_logs").get().then(logs => {
+            // متابعة بيانات اللاعب لحظياً
+            db.collection("users").where("password", "==", userPass).onSnapshot(snap => {
+                if(snap.empty) return window.location.href = 'login.html';
+                const doc = snap.docs[0];
+                userData = { id: doc.id, ...doc.data() };
+                
+                document.getElementById('player-name').innerText = userData.name;
+                document.getElementById('player-team').innerText = userData.team;
+                document.getElementById('player-score').innerText = userData.score || 0;
+
+                // سحب سجل اللعب الخاص به لإظهار علامة الصح
+                db.collection("users").doc(userData.id).collection("game_logs").get().then(logs => {
                     playedRounds = logs.docs.map(l => parseInt(l.id.replace('day_', '')));
-                    syncMap();
-                    loadRankings(currentUser.group);
+                    renderMap();
+                    loadRanking();
                 });
             });
         }
 
-        function syncMap() {
-            db.collection("settings").doc("map_config").onSnapshot(doc => {
-                const config = doc.data() || {};
+        function renderMap() {
+            // سحب اليوم النشط من "الخزنة - Vault" في اللوحة
+            db.collection("settings").doc("global_status").onSnapshot(doc => {
+                const global = doc.data() || { currentDay: 0, status: 'closed' };
                 const container = document.getElementById('view-map');
                 container.innerHTML = "";
 
                 for(let i=1; i<=30; i++) {
-                    const status = config[`round_${i}`] || 'locked';
                     const isPlayed = playedRounds.includes(i);
-                    let html = "";
+                    const isActive = (global.currentDay === i && global.status === 'active');
+                    let card = "";
 
                     if(isPlayed) {
-                        html = `<div class="round-item opacity-80">
-                                    <i class="fas fa-check-circle text-green-500 text-xl"></i>
-                                    <h3 class="font-bold text-gray-300">الجولة ${i}</h3>
-                                    <span class="text-green-500 font-black">5</span>
+                        card = `<div class="premium-card p-5 flex justify-between items-center opacity-70 border-r-4 border-green-500">
+                                    <div class="flex items-center gap-3"><i class="fas fa-check-circle text-green-500 text-xl"></i><span class="font-bold">الجولة ${i}</span></div>
+                                    <span class="text-green-500 font-black">تم الحل</span>
                                 </div>`;
-                    } else if(status === 'active') {
-                        html = `<div class="round-item active-glow" onclick="window.location.href='quiz.html?day=${i}'">
-                                    <div class="w-10 h-10 bg-yellow-500 rounded-full flex items-center justify-center text-black"><i class="fas fa-play text-xs"></i></div>
+                    } else if(isActive) {
+                        card = `<div class="premium-card active-glow p-5 flex justify-between items-center" onclick="window.location.href='quiz.html?day=${i}'">
                                     <div class="text-right"><h3 class="font-black text-lg">الجولة ${i}</h3><p class="text-yellow-500 text-[10px] font-bold">العب الآن!</p></div>
-                                    <i class="fas fa-chevron-left text-yellow-500 opacity-30"></i>
+                                    <div class="w-12 h-12 bg-yellow-500 rounded-full flex items-center justify-center text-black shadow-lg shadow-yellow-500/40"><i class="fas fa-play"></i></div>
                                 </div>`;
                     } else {
-                        html = `<div class="round-item opacity-30">
+                        card = `<div class="premium-card p-5 flex justify-between items-center opacity-30">
+                                    <span class="font-bold text-gray-500">الجولة ${i}</span>
                                     <i class="fas fa-lock text-gray-600"></i>
-                                    <h3 class="font-bold text-gray-500">الجولة ${i}</h3>
-                                    <span></span>
                                 </div>`;
                     }
-                    container.innerHTML += html;
+                    container.innerHTML += card;
                 }
             });
         }
 
-        function loadRankings(g) {
-            db.collection("users").where("group", "==", g).orderBy("score", "desc").onSnapshot(snap => {
+        function loadRanking() {
+            db.collection("users").where("group", "==", userData.group).orderBy("score", "desc").onSnapshot(snap => {
                 const list = document.getElementById('rank-list');
                 list.innerHTML = "";
                 snap.forEach((doc, i) => {
                     const u = doc.data();
+                    const isMe = u.password === userPass;
                     list.innerHTML += `
-                        <div class="bg-[#111827] p-4 rounded-2xl flex items-center border border-white/5">
-                            <span class="font-black text-yellow-500 text-lg w-10">${u.score}</span>
-                            <span class="flex-1 text-right font-bold">${u.name}</span>
-                            <span class="text-yellow-600 font-black ml-4">${i+1}</span>
+                        <div class="${isMe ? 'bg-yellow-500/10 border-yellow-500/50' : 'bg-white/5'} p-4 rounded-2xl flex items-center justify-between border border-transparent">
+                            <span class="font-black text-yellow-500 w-8 text-center">${i+1}</span>
+                            <span class="flex-1 text-right font-bold text-sm ${isMe ? 'text-yellow-500' : ''}">${u.name}</span>
+                            <span class="font-black text-white">${u.score}</span>
                         </div>`;
                 });
             });
         }
 
-        function toggleView(v) {
+        function switchView(v) {
             document.getElementById('view-map').classList.toggle('hidden', v !== 'map');
             document.getElementById('view-rank').classList.toggle('hidden', v !== 'rank');
             document.getElementById('btn-map').classList.toggle('active', v === 'map');
             document.getElementById('btn-rank').classList.toggle('active', v === 'rank');
         }
+
+        // دعم تثبيت أندرويد
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault(); deferredPrompt = e;
+            document.getElementById('android-install-btn').addEventListener('click', () => {
+                deferredPrompt.prompt();
+            });
+        });
     </script>
 </body>
-</html>
+    </html>
+    
