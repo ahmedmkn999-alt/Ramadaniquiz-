@@ -2,224 +2,248 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <link rel="manifest" href="manifest.json">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>المواجهة | VIP</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        body { font-family: 'Cairo', sans-serif; background: #0a0e17; color: white; overflow-x: hidden; }
-        
-        .premium-card { background: #161e2d; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; }
-        .nav-btn { flex: 1; padding: 12px; border-radius: 12px; font-weight: bold; font-size: 14px; text-align: center; cursor: pointer; transition: 0.3s; color: #94a3b8; }
-        .nav-btn.active { background: #d4af37; color: black; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); }
-        .active-glow { border: 2px solid #d4af37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.2); }
-        
-        /* انيميشن التحميل */
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #d4af37; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: 'Cairo', sans-serif; background: #0a0e17; color: white; overflow: hidden; touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+        .glass { background: rgba(22, 30, 45, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.05); }
+        .answer-btn { background: #161e2d; border: 1px solid rgba(255,255,255,0.05); transition: 0.2s; cursor: pointer; position: relative; overflow: hidden; }
+        .answer-btn:active { transform: scale(0.95); background: #d4af37; color: black; }
+        .correct { background: #10b981 !important; border-color: #059669 !important; color: white !important; font-weight: 900; }
+        .wrong { background: #ef4444 !important; border-color: #b91c1c !important; color: white !important; }
+        .timer-line { height: 4px; background: linear-gradient(to left, #d4af37, #f59e0b); width: 100%; transition: width 1s linear; }
+        #result-screen { display: none; position: fixed; inset: 0; background: rgba(5, 5, 5, 0.95); z-index: 1000; align-items: center; justify-content: center; text-align: center; }
     </style>
 </head>
-<body>
+<body class="p-4">
 
-    <div id="main-app" class="max-w-md mx-auto p-4 transition-opacity duration-700">
-        <div class="premium-card p-4 flex justify-between items-center mb-6 relative">
-            <button onclick="logOut()" class="bg-red-900/30 text-red-500 p-2 px-3 rounded-xl text-[10px] font-bold border border-red-500/20">
-                <i class="fas fa-sign-out-alt"></i> خروج
-            </button>
+    <div class="fixed top-0 left-0 w-full h-1 bg-gray-800 z-50">
+        <div id="t-bar" class="timer-line"></div>
+    </div>
+
+    <div class="max-w-md mx-auto h-screen flex flex-col">
+        <div class="flex justify-between items-center mt-6 mb-8">
+            <div class="glass px-4 py-2 rounded-2xl border-l-4 border-yellow-500">
+                <span class="text-[10px] text-gray-400 block font-bold">السؤال</span>
+                <span id="q-num" class="text-lg font-black text-yellow-500">1</span> <small class="text-gray-500">/ 15</small>
+            </div>
             
-            <div class="text-right flex-1 px-4">
-                <h2 id="player-name" class="font-black text-sm">جاري التحميل...</h2>
-                <div class="flex items-center justify-end gap-1 mt-1">
-                    <span id="player-group" class="text-[9px] bg-blue-900/40 text-blue-300 px-2 py-0.5 rounded-full border border-blue-500/20">...</span>
-                    <span id="player-team" class="text-[9px] bg-purple-900/40 text-purple-300 px-2 py-0.5 rounded-full border border-purple-500/20">...</span>
-                </div>
-            </div>
-
-            <div class="bg-black/40 px-3 py-1.5 rounded-xl text-center border border-white/5">
-                <p class="text-[8px] text-gray-400 uppercase">نقاطك</p>
-                <p id="player-score" class="text-lg font-black text-yellow-500 leading-none">0</p>
+            <div class="flex gap-2">
+                <button id="help-freeze" onclick="useFreeze()" class="glass w-12 h-12 rounded-xl flex items-center justify-center text-blue-400 border border-blue-500/30">
+                    <i class="fas fa-snowflake"></i>
+                </button>
+                <button id="help-50" onclick="use5050()" class="glass w-12 h-12 rounded-xl flex items-center justify-center text-purple-400 border border-purple-500/30">
+                    <i class="fas fa-cut"></i>
+                </button>
             </div>
         </div>
 
-        <div class="flex gap-2 mb-6 bg-[#161e2d] p-1.5 rounded-2xl border border-white/5">
-            <div class="nav-btn active" id="btn-map" onclick="switchView('map')"><i class="fas fa-map-marked-alt ml-1"></i> الخريطة</div>
-            <div class="nav-btn" id="btn-rank" onclick="switchView('rank')"><i class="fas fa-trophy ml-1"></i> الترتيب</div>
-        </div>
-
-        <div id="view-map" class="space-y-3">
-            <div class="text-center p-10"><div class="loader"></div> <p class="text-xs mt-2 text-gray-500">جاري تحميل الجولات...</p></div>
-        </div>
-
-        <div id="view-rank" class="hidden">
-            <div class="text-center mb-4">
-                <h3 class="text-yellow-500 font-black text-sm">ترتيب مجموعتك</h3>
-                <p class="text-[10px] text-gray-500">يتم التحديث لحظياً</p>
+        <div class="flex-1 flex flex-col justify-center">
+            <div id="q-area" class="mb-10 text-center">
+                <h2 id="q-text" class="text-xl font-black leading-relaxed">جاري استدعاء التحدي...</h2>
             </div>
-            <div id="rank-list" class="space-y-2">
-                </div>
+
+            <div id="options-grid" class="grid grid-cols-1 gap-3">
+            </div>
+        </div>
+    </div>
+
+    <div id="result-screen">
+        <div class="p-8 w-full">
+            <div class="w-24 h-24 bg-yellow-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_50px_rgba(212,175,55,0.3)]">
+                <i class="fas fa-trophy text-black text-4xl"></i>
+            </div>
+            <h2 class="text-3xl font-black mb-2">انتهى الوقت!</h2>
+            <p class="text-gray-500 font-bold mb-8">أداء بطل، إليك ما جمعته اليوم:</p>
+            
+            <div class="glass p-6 rounded-3xl border border-yellow-500/20 mb-10">
+                <span class="text-xs text-gray-400 block mb-1 font-bold uppercase">النقاط المكتسبة</span>
+                <span id="final-pts" class="text-6xl font-black text-yellow-500">0</span>
+            </div>
+
+            <button onclick="window.location.href='index.html'" class="w-full bg-yellow-500 text-black font-black py-4 rounded-2xl shadow-xl active:scale-95 transition-transform">
+                العودة للملعب <i class="fas fa-arrow-left mr-2"></i>
+            </button>
         </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
-        const firebaseConfig = { apiKey: "AIzaSyBZMnIJ_IOqeAfXqFt-m4tM1Lvo0tUDnk8", projectId: "ramadan-87817" };
+        const firebaseConfig = { 
+            apiKey: "AIzaSyBZMnIJ_IOqeAfXqFt-m4tM1Lvo0tUDnk8", 
+            projectId: "ramadan-87817"
+        };
         if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        let userPass = localStorage.getItem('user_pass');
-        let userData = null;
-        let globalStatus = { currentDay: 0, status: 'closed' }; // تخزين حالة الملعب بشكل عام
+        let questions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 15;
+        let isPaused = false;
+        let helpUsed = { freeze: false, cut: false };
 
-        function initApp() {
-            if(!userPass) {
-                window.location.href = 'login.html';
-                return;
-            }
+        // حماية: منع الرجوع أو السكرين
+        window.history.pushState(null, null, window.location.href);
+        window.onpopstate = () => window.history.pushState(null, null, window.location.href);
+        document.oncontextmenu = (e) => e.preventDefault();
 
-            // مراقبة حالة الملعب لحظياً
-            db.collection("settings").doc("global_status").onSnapshot(doc => {
-                if(doc.exists) {
-                    globalStatus = doc.data();
-                    // تحديث الخريطة فوراً عند تغيير الحالة من اللوحة
-                    if(userData) renderMap(); 
-                }
-            });
-
-            // سحب بيانات المستخدم واسم مجموعته
-            db.collection("users").where("password", "==", userPass).onSnapshot(snap => {
-                if(snap.empty) {
-                    logOut();
+        async function initQuiz() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const day = urlParams.get('day');
+            
+            try {
+                // 1. التأكد من التفعيل من اللوحة (The Vault)
+                const status = await db.collection("settings").doc("global_status").get();
+                const config = status.data();
+                
+                if (!config || config.currentDay != day || config.status !== 'active') {
+                    alert("الجولة دي مش مفعلة دلوقتي!");
+                    window.location.href = 'index.html';
                     return;
                 }
-                const doc = snap.docs[0];
-                userData = { id: doc.id, ...doc.data() };
+
+                // 2. سحب الأسئلة 
+                const quizDoc = await db.collection("quizzes_pool").doc(`day_${day}`).get();
                 
-                document.getElementById('player-name').innerText = userData.name;
-                document.getElementById('player-group').innerText = userData.group || 'بدون مجموعة';
-                document.getElementById('player-team').innerText = userData.team || 'فردي';
-                document.getElementById('player-score').innerText = userData.score || 0;
-
-                // تحميل الجولات والترتيب
-                renderMap();
-                loadRanking();
-            }, err => {
-                console.error("Firebase Error:", err);
-                alert("مشكلة في الاتصال بالانترنت!");
-            });
-        }
-
-        async function renderMap() {
-            try {
-                // سحب الجولات اللي اللاعب حلها
-                const logsSnap = await db.collection("users").doc(userData.id).collection("game_logs").get();
-                const playedRounds = logsSnap.docs.map(l => parseInt(l.id.replace('day_', '')));
-
-                const container = document.getElementById('view-map');
-                container.innerHTML = "";
-
-                for(let i=1; i<=30; i++) {
-                    const isPlayed = playedRounds.includes(i);
-                    const isActive = (globalStatus.currentDay == i && globalStatus.status === 'active');
-                    const isSoon = (globalStatus.currentDay == i && globalStatus.status === 'soon');
-
-                    let scoreForRound = 0;
-                    if(isPlayed) {
-                        const log = logsSnap.docs.find(l => l.id === `day_${i}`);
-                        scoreForRound = log ? log.data().score : 0;
+                if (quizDoc.exists) {
+                    const data = quizDoc.data();
+                    
+                    // القراءة من الشكل الجديد الصحيح
+                    if (data.variations && data.variations["0"] && data.variations["0"].questions && data.variations["0"].questions.length > 0) {
+                        questions = data.variations["0"].questions;
+                        startStep();
+                    } 
+                    // القراءة من الشكل القديم (لو البيانات لسه متحدثتش)
+                    else if (data["variations.0"] && data["variations.0"].questions && data["variations.0"].questions.length > 0) {
+                        questions = data["variations.0"].questions;
+                        startStep();
+                    } 
+                    else {
+                        alert("مفيش أسئلة مضافة هنا!");
+                        window.location.href = 'index.html';
                     }
-
-                    let cardHtml = "";
-                    if(isPlayed) {
-                        cardHtml = `
-                        <div class="premium-card p-4 flex justify-between items-center opacity-80 border-r-4 border-green-500">
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-check-circle text-green-500"></i>
-                                <div><p class="font-bold text-sm">الجولة ${i}</p><p class="text-[9px] text-gray-500">تم الإنجاز</p></div>
-                            </div>
-                            <span class="text-green-500 font-black text-sm">+${scoreForRound}</span>
-                        </div>`;
-                    } else if(isActive) {
-                        cardHtml = `
-                        <div class="premium-card active-glow p-4 flex justify-between items-center bg-gradient-to-l from-yellow-500/10 to-transparent" onclick="window.location.href='quiz.html?day=${i}'">
-                            <div class="flex items-center gap-3">
-                                <div class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></div>
-                                <div><p class="font-black text-sm">الجولة ${i}</p><p class="text-[9px] text-yellow-500 font-bold">العب الآن!</p></div>
-                            </div>
-                            <i class="fas fa-chevron-left text-yellow-500"></i>
-                        </div>`;
-                    } else if(isSoon) {
-                        cardHtml = `
-                        <div class="premium-card p-4 flex justify-between items-center border border-blue-500/30 bg-blue-900/10 transition-all duration-500">
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-clock text-blue-400 animate-bounce"></i>
-                                <div>
-                                    <p class="font-black text-sm text-blue-100">الجولة ${i}</p>
-                                    <p class="text-[10px] text-blue-400 font-bold">تفتح قريباً... استعد!</p>
-                                </div>
-                            </div>
-                            <i class="fas fa-hourglass-half text-blue-500/50"></i>
-                        </div>`;
-                    } else {
-                        cardHtml = `
-                        <div class="premium-card p-4 flex justify-between items-center opacity-30">
-                            <div class="flex items-center gap-3">
-                                <i class="fas fa-lock text-gray-600"></i>
-                                <p class="font-bold text-sm text-gray-500">الجولة ${i}</p>
-                            </div>
-                        </div>`;
-                    }
-                    container.innerHTML += cardHtml;
+                } else {
+                    alert("مفيش أسئلة مضافة هنا!");
+                    window.location.href = 'index.html';
                 }
-            } catch (e) {
-                console.error(e);
-                document.getElementById('view-map').innerHTML = "<p class='text-center text-red-500 text-xs'>فشل تحميل الخريطة</p>";
+            } catch (error) {
+                console.error("Quiz Initialization Error:", error);
+                alert("حصلت مشكلة في تحميل التحدي، حاول تاني.");
+                window.location.href = 'index.html';
             }
         }
 
-        function loadRanking() {
-            if(!userData.group) return;
+        function startStep() {
+            if (currentIdx >= questions.length) return finish();
+            
+            isPaused = false;
+            timeLeft = 15;
+            document.getElementById('q-num').innerText = currentIdx + 1;
+            const q = questions[currentIdx];
+            document.getElementById('q-text').innerText = q.q;
+            
+            const grid = document.getElementById('options-grid');
+            grid.innerHTML = "";
+            q.options.forEach((opt, i) => {
+                grid.innerHTML += `
+                    <button onclick="checkAns(${i})" class="answer-btn p-5 rounded-2xl text-right font-bold text-sm">
+                        ${opt}
+                    </button>`;
+            });
 
-            db.collection("users")
-                .where("group", "==", userData.group)
-                .orderBy("score", "desc")
-                .onSnapshot(snap => {
-                    const list = document.getElementById('rank-list');
-                    if(snap.empty) {
-                        list.innerHTML = "<p class='text-center text-gray-600 text-xs p-10'>لا يوجد متسابقين في مجموعتك بعد</p>";
-                        return;
+            runTimer();
+        }
+
+        function runTimer() {
+            clearInterval(timer);
+            const bar = document.getElementById('t-bar');
+            timer = setInterval(() => {
+                if (!isPaused) {
+                    timeLeft--;
+                    bar.style.width = (timeLeft / 15 * 100) + "%";
+                    if (timeLeft <= 0) {
+                        clearInterval(timer);
+                        checkAns(-1); // وقت خلص
                     }
-                    list.innerHTML = "";
-                    snap.forEach((doc, i) => {
-                        const u = doc.data();
-                        const isMe = u.password === userPass;
-                        list.innerHTML += `
-                            <div class="${isMe ? 'bg-yellow-500/10 border-yellow-500/50' : 'bg-white/5'} p-3 rounded-2xl flex items-center justify-between border border-transparent transition-all">
-                                <div class="flex items-center gap-3">
-                                    <span class="font-black ${i < 3 ? 'text-yellow-500' : 'text-gray-500'} w-5 text-center text-sm">${i+1}</span>
-                                    <span class="font-bold text-xs ${isMe ? 'text-yellow-500' : 'text-white'}">${u.name} ${isMe ? '(أنت)' : ''}</span>
-                                </div>
-                                <span class="font-black text-sm">${u.score || 0}</span>
-                            </div>`;
-                    });
-                });
+                }
+            }, 1000);
         }
 
-        function switchView(v) {
-            document.getElementById('view-map').classList.toggle('hidden', v !== 'map');
-            document.getElementById('view-rank').classList.toggle('hidden', v !== 'rank');
-            document.getElementById('btn-map').classList.toggle('active', v === 'map');
-            document.getElementById('btn-rank').classList.toggle('active', v === 'rank');
+        function useFreeze() {
+            if (helpUsed.freeze) return;
+            helpUsed.freeze = true;
+            isPaused = true;
+            document.getElementById('help-freeze').style.opacity = "0.2";
+            setTimeout(() => { isPaused = false; }, 10000); // تجميد 10 ثواني
         }
 
-        function logOut() {
-            localStorage.removeItem('user_pass');
-            window.location.href = 'login.html';
+        function use5050() {
+            if (helpUsed.cut) return;
+            helpUsed.cut = true;
+            document.getElementById('help-50').style.opacity = "0.2";
+            const correct = questions[currentIdx].correctIndex;
+            const btns = document.querySelectorAll('.answer-btn');
+            let hidden = 0;
+            btns.forEach((btn, i) => {
+                if (i !== correct && hidden < 2) {
+                    btn.style.visibility = "hidden";
+                    hidden++;
+                }
+            });
         }
 
-        // تشغيل التطبيق
-        initApp();
+        async function checkAns(idx) {
+            clearInterval(timer);
+            const q = questions[currentIdx];
+            const btns = document.querySelectorAll('.answer-btn');
+            
+            // إظهار الإجابة الصح
+            btns[q.correctIndex].classList.add('correct');
+            
+            if (idx === q.correctIndex) {
+                score++;
+            } else if (idx !== -1) {
+                btns[idx].classList.add('wrong');
+            }
+
+            setTimeout(() => {
+                currentIdx++;
+                startStep();
+            }, 1200);
+        }
+
+        async function finish() {
+            const pass = localStorage.getItem('user_pass');
+            const day = new URLSearchParams(window.location.search).get('day');
+            
+            // تحديث النقاط في اليوزرز
+            const userSnap = await db.collection("users").where("password", "==", pass).get();
+            const userRef = userSnap.docs[0].ref;
+            
+            await userRef.update({
+                score: firebase.firestore.FieldValue.increment(score)
+            });
+
+            // تسجيل إن الجولة دي خلصت
+            await userRef.collection("game_logs").doc(`day_${day}`).set({
+                day: parseInt(day),
+                score: score,
+                timestamp: Date.now()
+            });
+
+            document.getElementById('final-pts').innerText = score;
+            document.getElementById('result-screen').style.display = 'flex';
+        }
+
+        initQuiz();
     </script>
 </body>
-</html>
+    </html>
+    
