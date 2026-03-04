@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تحدي الجولة</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background: #0a0e17; color: white; overflow: hidden; }
+        .opt { background: #161e2d; border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.2s; }
+        .opt:active { transform: scale(0.98); background: #1e293b; }
+    </style>
+</head>
+<body class="p-6">
+    <div id="quiz-area" class="max-w-md mx-auto h-screen flex flex-col justify-center">
+        <div class="text-center mb-8">
+            <p id="q-count" class="text-yellow-500 font-black text-sm mb-2">سؤال 1 من 15</p>
+            <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
+                <div id="progress" class="bg-yellow-500 h-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <h2 id="q-text" class="text-xl font-black text-center mb-10 leading-relaxed">جاري تحميل السؤال...</h2>
+
+        <div id="options" class="space-y-3"></div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script>
+        const firebaseConfig = { apiKey: "AIzaSyBZMnIJ_IOqeAfXqFt-m4tM1Lvo0tUDnk8", projectId: "ramadan-87817" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const day = urlParams.get('day');
+        let questions = [];
+        let currentIdx = 0;
+        let score = 0;
+
+        db.collection("quizzes_pool").doc(`day_${day}`).get().then(doc => {
+            if(doc.exists) {
+                questions = doc.data().variations[0].questions; // بنسحب أول نسخة
+                showQuestion();
+            }
+        });
+
+        function showQuestion() {
+            const q = questions[currentIdx];
+            document.getElementById('q-text').innerText = q.q;
+            document.getElementById('q-count').innerText = `سؤال ${currentIdx + 1} من ${questions.length}`;
+            document.getElementById('progress').style.width = `${((currentIdx + 1) / questions.length) * 100}%`;
+
+            const optBox = document.getElementById('options');
+            optBox.innerHTML = "";
+            q.options.forEach((o, i) => {
+                optBox.innerHTML += `<button onclick="next(${i})" class="opt w-full p-5 rounded-2xl text-right font-bold text-sm hover:border-yellow-500">${o}</button>`;
+            });
+        }
+
+        function next(idx) {
+            if(idx === questions[currentIdx].correctIndex) score++;
+            
+            if(currentIdx < questions.length - 1) {
+                currentIdx++;
+                showQuestion();
+            } else {
+                finish();
+            }
+        }
+
+        function finish() {
+            const code = localStorage.getItem('user_pass');
+            db.collection("users").where("password", "==", code).get().then(snap => {
+                const userDoc = snap.docs[0];
+                // إضافة النقاط للاعب
+                userDoc.ref.update({ score: firebase.firestore.FieldValue.increment(score) });
+                // تسجيل الجولة إنها خلصت
+                userDoc.ref.collection("game_logs").doc(`day_${day}`).set({ day: day, score: score, time: Date.now() });
+                
+                alert(`عاش! خلصت الجولة وجبت ${score} من ${questions.length}`);
+                window.location.href = 'index.html';
+            });
+        }
+    </script>
+</body>
+</html>
