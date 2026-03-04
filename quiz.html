@@ -3,27 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تحدي الجولة</title>
+    <title>الجولة الحالية</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
         body { font-family: 'Cairo', sans-serif; background: #0a0e17; color: white; overflow: hidden; }
-        .opt { background: #161e2d; border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.2s; }
-        .opt:active { transform: scale(0.98); background: #1e293b; }
+        .opt-btn { background: #161e2d; border: 1px solid rgba(255, 255, 255, 0.05); transition: 0.2s; text-align: right; width: 100%; padding: 20px; border-radius: 20px; font-weight: bold; margin-bottom: 10px; }
+        .opt-btn:active { background: #d4af37; color: black; transform: scale(0.98); }
     </style>
 </head>
 <body class="p-6">
-    <div id="quiz-area" class="max-w-md mx-auto h-screen flex flex-col justify-center">
-        <div class="text-center mb-8">
-            <p id="q-count" class="text-yellow-500 font-black text-sm mb-2">سؤال 1 من 15</p>
-            <div class="w-full bg-gray-800 h-1.5 rounded-full overflow-hidden">
-                <div id="progress" class="bg-yellow-500 h-full transition-all duration-500" style="width: 0%"></div>
+    <div id="quiz-container" class="max-w-md mx-auto h-screen flex flex-col justify-center">
+        <div id="loading" class="text-center">جاري تحميل التحدي... ⏳</div>
+        
+        <div id="game-ui" class="hidden">
+            <div class="mb-10">
+                <div class="flex justify-between text-[10px] text-gray-400 font-bold mb-2">
+                    <span id="q-progress">سؤال 1 من 15</span>
+                    <span id="score-live">نقاطك: 0</span>
+                </div>
+                <div class="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                    <div id="bar" class="bg-yellow-500 h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
             </div>
+
+            <h2 id="question-text" class="text-xl font-black mb-10 leading-relaxed text-center">...</h2>
+            <div id="options-box"></div>
         </div>
-
-        <h2 id="q-text" class="text-xl font-black text-center mb-10 leading-relaxed">جاري تحميل السؤال...</h2>
-
-        <div id="options" class="space-y-3"></div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -37,50 +43,56 @@
         const day = urlParams.get('day');
         let questions = [];
         let currentIdx = 0;
-        let score = 0;
+        let points = 0;
 
+        // سحب الأسئلة من النسخة الأولى (نسخة 1)
         db.collection("quizzes_pool").doc(`day_${day}`).get().then(doc => {
-            if(doc.exists) {
-                questions = doc.data().variations[0].questions; // بنسحب أول نسخة
+            if(doc.exists && doc.data().variations && doc.data().variations[0]) {
+                questions = doc.data().variations[0].questions;
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('game-ui').classList.remove('hidden');
                 showQuestion();
-            }
+            } else { alert("الجولة دي لسه مفيهاش أسئلة!"); window.location.href='index.html'; }
         });
 
         function showQuestion() {
             const q = questions[currentIdx];
-            document.getElementById('q-text').innerText = q.q;
-            document.getElementById('q-count').innerText = `سؤال ${currentIdx + 1} من ${questions.length}`;
-            document.getElementById('progress').style.width = `${((currentIdx + 1) / questions.length) * 100}%`;
-
-            const optBox = document.getElementById('options');
-            optBox.innerHTML = "";
-            q.options.forEach((o, i) => {
-                optBox.innerHTML += `<button onclick="next(${i})" class="opt w-full p-5 rounded-2xl text-right font-bold text-sm hover:border-yellow-500">${o}</button>`;
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('q-progress').innerText = `سؤال ${currentIdx+1} من ${questions.length}`;
+            document.getElementById('bar').style.width = `${((currentIdx+1)/questions.length)*100}%`;
+            
+            const box = document.getElementById('options-box');
+            box.innerHTML = "";
+            q.options.forEach((opt, i) => {
+                box.innerHTML += `<button onclick="handleAnswer(${i})" class="opt-btn">${opt}</button>`;
             });
         }
 
-        function next(idx) {
-            if(idx === questions[currentIdx].correctIndex) score++;
-            
+        function handleAnswer(choice) {
+            if(choice === questions[currentIdx].correctIndex) points++;
+            document.getElementById('score-live').innerText = `نقاطك: ${points}`;
+
             if(currentIdx < questions.length - 1) {
                 currentIdx++;
                 showQuestion();
             } else {
-                finish();
+                saveResult();
             }
         }
 
-        function finish() {
-            const code = localStorage.getItem('user_pass');
-            db.collection("users").where("password", "==", code).get().then(snap => {
+        function saveResult() {
+            const pass = localStorage.getItem('user_pass');
+            db.collection("users").where("password", "==", pass).get().then(snap => {
                 const userDoc = snap.docs[0];
-                // إضافة النقاط للاعب
-                userDoc.ref.update({ score: firebase.firestore.FieldValue.increment(score) });
-                // تسجيل الجولة إنها خلصت
-                userDoc.ref.collection("game_logs").doc(`day_${day}`).set({ day: day, score: score, time: Date.now() });
-                
-                alert(`عاش! خلصت الجولة وجبت ${score} من ${questions.length}`);
-                window.location.href = 'index.html';
+                // 1. زيادة نقاط اللاعب
+                userDoc.ref.update({ score: firebase.firestore.FieldValue.increment(points) });
+                // 2. تسجيل إن الجولة دي خلصت عشان علامة الصح
+                userDoc.ref.collection("game_logs").doc(`day_${day}`).set({
+                    day: parseInt(day), score: points, time: Date.now()
+                }).then(() => {
+                    alert(`مبروك! جمعت ${points} نقطة في جولة اليوم.`);
+                    window.location.href = 'index.html';
+                });
             });
         }
     </script>
