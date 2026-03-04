@@ -3,28 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تسجيل الدخول | ملعب رمضان</title>
+    <title>دخول المتسابقين | VIP</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
         body { 
             font-family: 'Cairo', sans-serif; 
-            background: url('https://i.postimg.cc/QN7YYDZb/1772330473684.png') no-repeat center center fixed;
+            background: #050505 url('https://i.postimg.cc/QN7YYDZb/1772330473684.png') no-repeat center center fixed;
             background-size: cover;
         }
-        .glass-login { background: rgba(10, 14, 23, 0.85); backdrop-filter: blur(15px); border: 1px solid rgba(212, 175, 55, 0.3); }
+        .glass-login { background: rgba(10, 14, 23, 0.9); backdrop-filter: blur(15px); border: 1px solid rgba(212, 175, 55, 0.3); }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
     <div class="glass-login w-full max-w-sm p-8 rounded-[30px] text-center shadow-2xl">
         <img src="https://i.postimg.cc/QN7YYDZb/1772330473684.png" class="w-24 h-24 mx-auto rounded-2xl mb-6 border-2 border-yellow-500 shadow-lg">
-        <h1 class="text-2xl font-black text-white mb-2 text-yellow-500">مرحباً بك في الملعب</h1>
-        <p class="text-gray-400 text-xs mb-8">أدخل كود الدخول الخاص بك لبدء التحدي</p>
+        <h1 class="text-2xl font-black text-yellow-500 mb-2">ملعب رمضان</h1>
+        <p class="text-gray-400 text-xs mb-8">أدخل كود الدخول لبدء المنافسة</p>
         
-        <input type="password" id="user-code" placeholder="كود المتسابق" class="w-full p-4 rounded-2xl bg-black/50 border border-gray-700 text-white text-center text-xl tracking-widest outline-none focus:border-yellow-500 mb-6">
-        
-        <button onclick="login()" class="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-black py-4 rounded-2xl shadow-xl transition-transform active:scale-95">دخول الآن 🚀</button>
+        <input type="text" id="user-code" placeholder="الكود السداسي" class="w-full p-4 rounded-2xl bg-black/50 border border-gray-700 text-white text-center text-xl font-bold outline-none focus:border-yellow-500 mb-6">
+        <button onclick="login()" id="login-btn" class="w-full bg-yellow-500 text-black font-black py-4 rounded-2xl shadow-xl active:scale-95 transition">دخول الملعب ⚽</button>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -35,12 +33,18 @@
         const db = firebase.firestore();
 
         function login() {
-            const code = document.getElementById('user-code').value;
+            const code = document.getElementById('user-code').value.trim();
+            if(!code) return alert("دخل الكود الأول!");
+            
+            document.getElementById('login-btn').innerText = "جاري التحقق...";
             db.collection("users").where("password", "==", code).get().then(snap => {
                 if(!snap.empty) {
                     localStorage.setItem('user_pass', code);
                     window.location.href = 'index.html';
-                } else { alert("الكود غير صحيح!"); }
+                } else {
+                    alert("الكود ده غلط يا بطل، راجع لوحة التحكم!");
+                    document.getElementById('login-btn').innerText = "دخول الملعب ⚽";
+                }
             });
         }
     </script>
