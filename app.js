@@ -1,263 +1,132 @@
-// --- 1. إعدادات قاعدة البيانات والحماية ---
+// إعدادات Firebase
 const firebaseConfig = { 
     apiKey: "AIzaSyBZMnIJ_IOqeAfXqFt-m4tM1Lvo0tUDnk8", 
     projectId: "ramadan-87817", 
     appId: "1:343525703258:web:6776b4857425df8bcca263" 
 };
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-let currentUser = null;
-let currentDayStatus = 0;
-let quizData = [];
-let currentQuestionIndex = 0;
-let timer;
-let timeLeft = 15;
-let scoreThisRound = 0;
+// 1. نظام كشف التثبيت (الـ Guard)
+function checkInstallation() {
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+    const guard = document.getElementById('install-guard');
+    const app = document.getElementById('app-content');
 
-// وسائل المساعدة
-let used5050 = false;
-let usedFreeze = false;
-let isQuizActive = false;
-
-// --- 2. نظام مكافحة الغش (الجن الأزرق) ---
-document.addEventListener('contextmenu', e => e.preventDefault()); // منع كليك يمين
-document.addEventListener('keydown', e => {
-    // منع اختصارات المطورين (F12, Ctrl+Shift+I, Ctrl+U)
-    if(e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I') || (e.ctrlKey && e.key === 'u')) {
-        e.preventDefault();
-    }
-});
-
-// منع تبديل التابات أثناء الكويز
-document.addEventListener("visibilitychange", () => {
-    if (document.hidden && isQuizActive) {
-        punishCheater();
-    }
-});
-
-function punishCheater() {
-    clearInterval(timer);
-    isQuizActive = false;
-    document.getElementById('cheat-modal').style.display = 'flex';
-    // خصم نقطتين كعقاب
-    if(currentUser) {
-        db.collection("users").doc(currentUser.id).update({
-            score: firebase.firestore.FieldValue.increment(-2),
-            cheatCount: firebase.firestore.FieldValue.increment(1)
-        });
-    }
-}
-
-// --- 3. إدارة الشاشات وتسجيل الدخول ---
-function showScreen(id) {
-    document.querySelectorAll('.view-screen').forEach(el => el.classList.remove('active', 'hidden'));
-    document.querySelectorAll('.view-screen').forEach(el => el.classList.add('hidden'));
-    document.getElementById(id).classList.remove('hidden');
-    document.getElementById(id).classList.add('active');
-}
-
-window.onload = () => {
-    const savedId = localStorage.getItem('player_id');
-    if(savedId) {
-        fetchUserData(savedId);
+    if (!isStandalone) {
+        guard.style.display = 'flex';
+        // كشف نوع الجهاز
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) document.getElementById('ios-inst').classList.remove('hidden');
+        else document.getElementById('android-btn').classList.remove('hidden');
     } else {
-        showScreen('login-view');
+        guard.style.display = 'none';
+        app.classList.remove('opacity-0');
+        loadAppData(); // ابدأ تحميل البيانات لو مثبت
     }
-};
+}
 
-function loginUser() {
-    const code = document.getElementById('user-code').value.trim();
-    if(!code) return alert("اكتب الكود الأول!");
+// 2. تحميل البيانات
+let currentUser = null;
+function loadAppData() {
+    // افترضنا إن الكود متخزن في المتصفح بعد أول تسجيل دخول
+    const userPass = localStorage.getItem('user_pass');
+    if(!userPass) {
+        const pass = prompt("دخل كود الدخول الخاص بك:");
+        if(pass) localStorage.setItem('user_pass', pass);
+        window.location.reload();
+        return;
+    }
+
+    // مراقبة بيانات المستخدم
+    db.collection("users").where("password", "==", userPass).onSnapshot(snap => {
+        if(!snap.empty) {
+            currentUser = { id: snap.docs[0].id, ...snap.docs[0].data() };
+            document.getElementById('u-name').innerText = currentUser.name;
+            document.getElementById('u-team').innerText = currentUser.team;
+            document.getElementById('u-score').innerText = currentUser.score;
+            loadRanking(currentUser.group);
+        }
+    });
+
+    // مراقبة حالة الجولات (اللي إنت بتفتحها من اللوحة)
+    db.collection("settings").doc("map_config").onSnapshot(doc => {
+        if(doc.exists) renderRounds(doc.data());
+    });
+}
+
+function renderRounds(config) {
+    const container = document.getElementById('rounds-container');
+    container.innerHTML = "";
     
-    db.collection("users").where("password", "==", code).get().then(snap => {
-        if(snap.empty) return alert("الكود غير صحيح!");
-        const doc = snap.docs[0];
-        localStorage.setItem('player_id', doc.id);
-        fetchUserData(doc.id);
-    });
+    // هنعرض 30 جولة
+    for(let i=1; i<=30; i++) {
+        const status = config[`round_${i}`] || 'locked'; // locked, active, done
+        let cardHTML = '';
+
+        if(status === 'active') {
+            cardHTML = `
+            <div class="premium-card active-round p-5 flex justify-between items-center" onclick="startQuiz(${i})">
+                <div>
+                    <h3 class="font-black text-lg">الجولة ${i}</h3>
+                    <p class="text-yellow-500 text-xs font-bold">العب الآن! ▶️</p>
+                </div>
+                <div class="play-btn shadow-[0_0_15px_#d4af37]"><i class="fas fa-play"></i></div>
+            </div>`;
+        } else if(status === 'done') {
+            cardHTML = `
+            <div class="premium-card p-5 flex justify-between items-center opacity-80">
+                <h3 class="font-bold text-gray-300">الجولة ${i}</h3>
+                <i class="fas fa-check-circle text-green-500 text-xl"></i>
+            </div>`;
+        } else {
+            cardHTML = `
+            <div class="premium-card p-5 flex justify-between items-center opacity-40">
+                <h3 class="font-bold text-gray-500">الجولة ${i}</h3>
+                <i class="fas fa-lock text-gray-600"></i>
+            </div>`;
+        }
+        container.innerHTML += cardHTML;
+    }
 }
 
-function fetchUserData(id) {
-    db.collection("users").doc(id).onSnapshot(doc => {
-        if(!doc.exists) return localStorage.clear(), location.reload();
-        currentUser = { id: doc.id, ...doc.data() };
-        updateHeader();
-        fetchMapData();
-    });
-}
-
-function updateHeader() {
-    document.getElementById('player-name').innerText = currentUser.name;
-    document.getElementById('player-group').innerText = currentUser.group + ' | ' + currentUser.team;
-    document.getElementById('player-score').innerText = currentUser.score || 0;
-    document.getElementById('header-avatar').innerText = currentUser.name.charAt(0);
-}
-
-// --- 4. بناء الخريطة والجولات ---
-function fetchMapData() {
-    db.collection("settings").doc("global_status").get().then(doc => {
-        currentDayStatus = doc.exists ? doc.data().currentDay : 1;
-        
-        db.collection("users").doc(currentUser.id).collection("game_logs").get().then(logsSnap => {
-            const playedDays = logsSnap.docs.map(d => d.data().day);
-            renderMap(playedDays);
-            showScreen('map-view');
+function loadRanking(groupName) {
+    db.collection("users").where("group", "==", groupName).orderBy("score", "desc").onSnapshot(snap => {
+        const list = document.getElementById('rank-list');
+        list.innerHTML = "";
+        snap.forEach((doc, i) => {
+            const u = doc.data();
+            list.innerHTML += `
+            <div class="bg-[#111827] p-4 rounded-2xl flex items-center border border-white/5">
+                <span class="w-8 font-black text-yellow-500">${i+1}</span>
+                <span class="flex-1 font-bold text-sm">${u.name}</span>
+                <span class="font-black text-yellow-500">${u.score}</span>
+            </div>`;
         });
     });
 }
 
-function renderMap(playedDays) {
-    const container = document.getElementById('map-rounds');
-    container.innerHTML = '';
-    
-    // بناء 20 جولة 
-    for(let i=1; i<=20; i++) {
-        let stateClass = 'round-locked';
-        let icon = `<i class="fas fa-lock text-sm"></i>`;
-        let action = '';
-
-        if(playedDays.includes(i)) {
-            stateClass = 'round-played';
-            icon = `<i class="fas fa-check"></i>`;
-        } else if(i === currentDayStatus) {
-            stateClass = 'round-active';
-            icon = i;
-            action = `onclick="startQuiz(${i})"`;
-        } else if (i < currentDayStatus && !playedDays.includes(i)) {
-            // جولة فاتت وماتلعبتش
-            stateClass = 'round-locked';
-            icon = `<i class="fas fa-times text-red-500"></i>`;
-        }
-
-        // تبديل الأماكن يمين ويسار لإعطاء شكل متعرج للخريطة
-        const align = i % 2 === 0 ? 'translate-x-12' : '-translate-x-12';
-
-        container.innerHTML += `
-            <div class="flex w-full justify-center transform ${align}">
-                <div class="round-node ${stateClass}" ${action}>${icon}</div>
-            </div>
-        `;
-    }
+function showTab(tab, btn) {
+    document.getElementById('tab-map').classList.toggle('hidden', tab !== 'map');
+    document.getElementById('tab-rank').classList.toggle('hidden', tab !== 'rank');
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    btn.classList.add('active');
 }
 
-// --- 5. منطق الكويز ووسائل المساعدة ---
-function startQuiz(day) {
-    db.collection("quizzes_pool").doc(`day_${day}`).get().then(doc => {
-        if(!doc.exists || !doc.data().variations || !doc.data().variations["0"]) {
-            return alert("الأسئلة لسه منزلتش يا بطل، ارجع تاني بعدين!");
-        }
-        // اختيار النسخة الأولى حالياً (ممكن يتطور لاختيار عشوائي)
-        quizData = doc.data().variations["0"].questions;
-        currentQuestionIndex = 0;
-        scoreThisRound = 0;
-        used5050 = false;
-        usedFreeze = false;
-        
-        // تصفير أزرار المساعدة
-        document.getElementById('btn-5050').classList.remove('opacity-50', 'pointer-events-none');
-        document.getElementById('btn-freeze').classList.remove('opacity-50', 'pointer-events-none');
-        
-        isQuizActive = true;
-        showScreen('quiz-view');
-        loadQuestion();
+function startQuiz(roundNum) {
+    // هنا تحط كود تحويل المتسابق لصفحة الأسئلة
+    alert("جارٍ تجهيز أسئلة الجولة " + roundNum);
+}
+
+// تشغيل الفحص عند التحميل
+window.onload = checkInstallation;
+
+// دعم أندرويد (تنبيه التثبيت)
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    document.getElementById('android-btn').addEventListener('click', () => {
+        deferredPrompt.prompt();
     });
-}
-
-function loadQuestion() {
-    if(currentQuestionIndex >= quizData.length) {
-        return finishQuiz();
-    }
-    
-    const q = quizData[currentQuestionIndex];
-    document.getElementById('q-current').innerText = currentQuestionIndex + 1;
-    document.getElementById('q-total').innerText = quizData.length;
-    document.getElementById('question-text').innerText = q.q;
-    
-    const optsContainer = document.getElementById('options-container');
-    optsContainer.innerHTML = '';
-    
-    q.options.forEach((opt, idx) => {
-        optsContainer.innerHTML += `<button class="option-btn" data-idx="${idx}" onclick="selectAnswer(${idx})">${opt}</button>`;
-    });
-    
-    timeLeft = 15;
-    updateTimerDisplay();
-    clearInterval(timer);
-    timer = setInterval(() => {
-        timeLeft--;
-        updateTimerDisplay();
-        if(timeLeft <= 0) {
-            clearInterval(timer);
-            currentQuestionIndex++;
-            loadQuestion();
-        }
-    }, 1000);
-}
-
-function updateTimerDisplay() {
-    const tDisplay = document.getElementById('timer-display');
-    tDisplay.innerText = timeLeft;
-    if(timeLeft <= 5) tDisplay.classList.add('text-red-500', 'animate-ping');
-    else tDisplay.classList.remove('text-red-500', 'animate-ping');
-}
-
-function selectAnswer(idx) {
-    clearInterval(timer);
-    const q = quizData[currentQuestionIndex];
-    if(idx === q.correctIndex) {
-        scoreThisRound += 10; // 10 نقط لكل إجابة صح
-    }
-    currentQuestionIndex++;
-    loadQuestion();
-}
-
-// وسائل المساعدة
-function use5050() {
-    if(used5050) return;
-    used5050 = true;
-    document.getElementById('btn-5050').classList.add('opacity-50', 'pointer-events-none');
-    
-    const q = quizData[currentQuestionIndex];
-    const btns = document.querySelectorAll('.option-btn');
-    let removed = 0;
-    
-    btns.forEach((btn, idx) => {
-        if(idx !== q.correctIndex && removed < 2) {
-            btn.classList.add('disabled', 'opacity-20');
-            btn.removeAttribute('onclick');
-            removed++;
-        }
-    });
-}
-
-function useFreeze() {
-    if(usedFreeze) return;
-    usedFreeze = true;
-    document.getElementById('btn-freeze').classList.add('opacity-50', 'pointer-events-none');
-    timeLeft += 10;
-    updateTimerDisplay();
-}
-
-function finishQuiz() {
-    isQuizActive = false;
-    
-    // تسجيل النتيجة في الفايربيس
-    db.collection("users").doc(currentUser.id).update({
-        score: firebase.firestore.FieldValue.increment(scoreThisRound)
-    });
-    
-    db.collection("users").doc(currentUser.id).collection("game_logs").doc(`day_${currentDayStatus}`).set({
-        day: currentDayStatus,
-        score: scoreThisRound,
-        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-        alert(`عاش! خلصت الجولة وجمعت ${scoreThisRound} نقطة 🏆`);
-        fetchMapData(); // هيرجع يعرض الخريطة ويحدثها
-    });
-}
-
-function returnToMap() {
-    document.getElementById('cheat-modal').style.display = 'none';
-    fetchMapData();
-}
+});
