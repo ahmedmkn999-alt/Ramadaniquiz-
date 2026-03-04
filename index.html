@@ -2,84 +2,101 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ramadan Quiz 🌙</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>ملعب رمضان | التطبيق الرسمي</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="app.css">
     
-    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    <script defer src="app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        body { font-family: 'Cairo', sans-serif; background: #0a0e17; color: white; overflow-x: hidden; }
+        
+        /* شاشة الحماية من المتصفح */
+        #install-guard {
+            display: none; position: fixed; inset: 0; background: #0a0e17; z-index: 9999;
+            flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px;
+        }
+
+        .premium-card { background: #161e2d; border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 20px; transition: 0.3s; }
+        .active-round { border: 2px solid #d4af37; box-shadow: 0 0 20px rgba(212, 175, 55, 0.2); }
+        .play-btn { width: 50px; height: 50px; background: #d4af37; border-radius: 50%; color: black; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4); }
+        .nav-bar { background: #161e2d; border-radius: 15px; display: flex; padding: 5px; margin-bottom: 20px; }
+        .nav-item { flex: 1; padding: 10px; text-align: center; border-radius: 12px; font-size: 14px; cursor: pointer; font-weight: bold; }
+        .nav-item.active { background: #d4af37; color: black; }
+    </style>
 </head>
-<body class="bg-gray-900 text-white min-h-screen overflow-hidden select-none">
+<body>
 
-    <div id="login-view" class="view-screen active flex flex-col items-center justify-center min-h-screen p-4">
-        <div class="glass-panel p-8 rounded-3xl text-center w-full max-w-sm shadow-2xl">
-            <img src="https://i.postimg.cc/QN7YYDZb/1772330473684.png" alt="Ramadan Quiz" class="w-24 h-24 mx-auto rounded-full mb-4 shadow-lg object-cover border-2 border-yellow-500">
-            <h2 class="text-2xl font-black mb-6 text-yellow-500">تسجيل الدخول</h2>
-            <input type="text" id="user-code" placeholder="أدخل كود الدخول..." class="w-full p-4 rounded-xl text-center text-xl font-bold mb-4 bg-black/50 border border-yellow-600 outline-none focus:border-yellow-400">
-            <button onclick="loginUser()" class="gold-btn w-full p-4 rounded-xl text-lg font-black shadow-lg">دخول 🚀</button>
+    <div id="install-guard">
+        <div class="w-24 h-24 bg-yellow-500 rounded-3xl mb-6 flex items-center justify-center shadow-2xl">
+            <i class="fas fa-mobile-alt text-5xl text-black"></i>
         </div>
+        <h1 class="text-2xl font-black mb-2 text-yellow-500">ثبت التطبيق أولاً!</h1>
+        <p class="text-gray-400 text-sm mb-8">عشان تاخد أفضل تجربة وتدخل المسابقة، لازم تضيف التطبيق لشاشتك الرئيسية.</p>
+        
+        <div id="ios-inst" class="hidden w-full bg-[#161e2d] p-4 rounded-2xl border border-gray-700">
+            <p class="text-xs mb-4">لمستخدمي آيفون (سفاري):</p>
+            <div class="flex items-center gap-3 text-sm font-bold">
+                <span>1. اضغط على زر المشاركة</span>
+                <i class="fas fa-share-square text-blue-400 text-xl"></i>
+            </div>
+            <div class="h-[1px] bg-gray-700 my-3"></div>
+            <div class="flex items-center gap-3 text-sm font-bold">
+                <span>2. اختر "إضافة إلى الشاشة الرئيسية"</span>
+                <i class="fas fa-plus-square text-gray-300 text-xl"></i>
+            </div>
+        </div>
+
+        <button id="android-btn" class="hidden bg-yellow-500 text-black font-black py-4 px-10 rounded-2xl shadow-lg">
+            تثبيت التطبيق الآن 📲
+        </button>
     </div>
 
-    <div id="map-view" class="view-screen min-h-screen relative hidden overflow-y-auto pb-20">
-        <div class="glass-panel sticky top-0 z-50 p-4 rounded-b-3xl border-b border-yellow-500 flex justify-between items-center mb-6">
+    <div id="app-content" class="max-w-md mx-auto p-4 opacity-0 transition-opacity duration-500">
+        
+        <div class="premium-card p-4 flex justify-between items-center mb-6">
             <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-gradient-to-tr from-yellow-500 to-yellow-700 rounded-full flex items-center justify-center font-bold text-xl border-2 border-white" id="header-avatar"></div>
+                <div class="w-12 h-12 bg-yellow-600 rounded-xl flex items-center justify-center font-black text-black">U</div>
                 <div>
-                    <h3 id="player-name" class="font-black text-sm text-yellow-400">...</h3>
-                    <p id="player-group" class="text-[10px] text-gray-300 bg-gray-800 px-2 py-0.5 rounded-full mt-1">...</p>
+                    <h2 id="u-name" class="font-black text-sm">جاري التحميل...</h2>
+                    <p id="u-team" class="text-[10px] text-blue-400 font-bold">...</p>
                 </div>
             </div>
-            <div class="text-center">
+            <div class="text-center bg-black/40 px-4 py-2 rounded-xl border border-white/5">
                 <p class="text-[10px] text-gray-400">نقاطك</p>
-                <p id="player-score" class="text-xl font-black text-white">0</p>
+                <p id="u-score" class="text-xl font-black text-yellow-500">0</p>
             </div>
         </div>
 
-        <div class="max-w-md mx-auto p-4">
-            <h2 class="text-center text-xl font-black mb-6 text-yellow-500 drop-shadow-md">خريطة الجولات 🗺️</h2>
-            <div id="map-rounds" class="flex flex-col items-center gap-4 relative">
-                <div class="absolute w-1 bg-yellow-600/30 h-full z-0 left-1/2 transform -translate-x-1/2"></div>
+        <div class="nav-bar">
+            <div class="nav-item active" onclick="showTab('map', this)">🗺️ الخريطة</div>
+            <div class="nav-item" onclick="showTab('rank', this)">🏆 المجموعة</div>
+        </div>
+
+        <div id="tab-map">
+            <div id="rounds-container" class="space-y-4">
                 </div>
         </div>
-    </div>
 
-    <div id="quiz-view" class="view-screen min-h-screen hidden flex-col relative p-4 bg-gradient-to-b from-gray-900 to-black">
-        <div class="flex justify-between items-center mb-6">
-            <div class="glass-panel px-4 py-2 rounded-xl text-yellow-500 font-bold border border-yellow-600">
-                سؤال <span id="q-current">1</span>/<span id="q-total">15</span>
-            </div>
-            <div class="glass-panel px-4 py-2 rounded-xl text-red-500 font-black text-xl border border-red-600 flex items-center gap-2">
-                <i class="fas fa-stopwatch"></i> <span id="timer-display">15</span>
-            </div>
-        </div>
-
-        <div class="glass-panel p-6 rounded-3xl mb-6 text-center shadow-xl border border-gray-700 flex-1 flex items-center justify-center min-h-[150px]">
-            <h2 id="question-text" class="text-xl font-bold text-white leading-relaxed">جاري تحميل السؤال...</h2>
-        </div>
-
-        <div id="options-container" class="grid grid-cols-1 gap-3 mb-6">
-            </div>
-
-        <div class="grid grid-cols-2 gap-4 mt-auto">
-            <button id="btn-5050" onclick="use5050()" class="glass-panel p-3 rounded-xl text-blue-400 font-bold border border-blue-600 hover:bg-blue-900/50 transition flex flex-col items-center gap-1">
-                <i class="fas fa-cut text-xl"></i> <span class="text-xs">حذف إجابتين</span>
-            </button>
-            <button id="btn-freeze" onclick="useFreeze()" class="glass-panel p-3 rounded-xl text-teal-400 font-bold border border-teal-600 hover:bg-teal-900/50 transition flex flex-col items-center gap-1">
-                <i class="fas fa-snowflake text-xl"></i> <span class="text-xs">+10 ثواني</span>
-            </button>
+        <div id="tab-rank" class="hidden">
+            <h3 class="text-center text-gray-500 font-bold text-xs mb-4">ترتيب مجموعتك</h3>
+            <div id="rank-list" class="space-y-2"></div>
         </div>
     </div>
 
-    <div id="cheat-modal" class="fixed inset-0 bg-red-900/95 z-[9999] hidden flex-col items-center justify-center p-6 text-center">
-        <i class="fas fa-user-secret text-6xl text-white mb-4"></i>
-        <h2 class="text-3xl font-black text-white mb-2">تحذير غش! 🚨</h2>
-        <p class="text-red-200 mb-6 font-bold">ممنوع الخروج من الصفحة أو محاولة تصوير الشاشة أثناء الكويز. سيتم خصم نقاط إذا تكرر الأمر.</p>
-        <button onclick="returnToMap()" class="bg-white text-red-900 px-8 py-3 rounded-xl font-black">عودة للخريطة</button>
-    </div>
-
+    <script src="app.js"></script>
+    <script>
+        // تسجيل الـ Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
 </body>
-          </html>
-          
+</html>
