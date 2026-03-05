@@ -1,307 +1,454 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>المواجهة | VIP</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
-        
-        body { 
-            font-family: 'Cairo', sans-serif; 
-            background: #0a0e17; 
-            color: white; 
-            overflow: hidden; 
-            touch-action: manipulation; 
-            -webkit-user-select: none;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000008">
+<link rel="apple-touch-icon" href="https://i.postimg.cc/QN7YYDZb/1772330473684.png">
+<title>ملعب رمضان | الدخول</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&family=Tajawal:wght@800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style>
+:root {
+  --gold: #C9A84C; --gold2: #F0C96B; --gold3: #8B6010;
+  --ember: #FF4500; --ember2: #FF6B00; --ember3: #FFB347;
+  --bg: #000008; --card: rgba(12,6,2,0.88);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
 
-        /* الاستايل الدهبي والأسود بتاعك */
-        .glass { 
-            background: rgba(22, 30, 45, 0.7); 
-            backdrop-filter: blur(10px); 
-            border: 1px solid rgba(255,255,255,0.05); 
-        }
+/* CURSOR */
+*{cursor:none!important;}
+#cursor{position:fixed;width:20px;height:20px;pointer-events:none;z-index:99999;transform:translate(-50%,-50%);}
+#cursor-ring{position:fixed;width:40px;height:40px;pointer-events:none;z-index:99998;transform:translate(-50%,-50%);border:1.5px solid rgba(201,168,76,0.5);border-radius:50%;transition:all 0.12s ease;}
 
-        .q-box { 
-            border: 2px solid #d4af37; 
-            border-radius: 20px; 
-            padding: 10px 25px; 
-            background: rgba(212, 175, 55, 0.05);
-        }
+body{
+  font-family:'Cairo',sans-serif;
+  background:var(--bg);
+  color:white;
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;position:relative;
+}
 
-        .help-btn { 
-            width: 55px; 
-            height: 55px; 
-            border-radius: 15px; 
-            border: 1px solid rgba(255,255,255,0.1); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            background: #161e2d; 
-            cursor: pointer;
-            transition: 0.3s;
-        }
+/* CANVAS BG */
+#bgCanvas{position:fixed;inset:0;z-index:0;}
 
-        .answer-btn { 
-            background: #161e2d; 
-            border: 1px solid rgba(255,255,255,0.05); 
-            padding: 22px; 
-            border-radius: 20px; 
-            text-align: right; 
-            transition: 0.2s; 
-            width: 100%; 
-            font-weight: 700;
-            font-size: 1.1rem;
-            position: relative;
-        }
+/* METEOR SHOWER */
+.meteor{
+  position:fixed;width:2px;height:80px;
+  background:linear-gradient(to bottom,rgba(201,168,76,0),rgba(201,168,76,0.9),rgba(255,255,255,0));
+  border-radius:100%;pointer-events:none;z-index:1;
+  animation:meteorFall var(--dur,3s) linear var(--delay,0s) infinite;
+  top:var(--top,-10%);left:var(--left,50%);
+  transform:rotate(15deg);
+}
+@keyframes meteorFall{
+  0%{transform:translateY(-200px) translateX(0) rotate(15deg);opacity:0;}
+  5%{opacity:1;}
+  100%{transform:translateY(120vh) translateX(100px) rotate(15deg);opacity:0;}
+}
 
-        .answer-btn:active { 
-            transform: scale(0.96); 
-            background: #d4af37; 
-            color: black; 
-        }
+/* FIRE PARTICLES */
+.fire-p{
+  position:fixed;border-radius:50%;pointer-events:none;z-index:2;
+  animation:fireRise var(--fr,2s) ease-out var(--fd,0s) infinite;
+  bottom:0;left:var(--fl,50%);
+  width:var(--fs,6px);height:var(--fs,6px);
+  background:radial-gradient(circle,#fff 0%,var(--ember2) 40%,var(--ember) 80%,transparent 100%);
+}
+@keyframes fireRise{
+  0%{transform:translateY(0) scale(1);opacity:0.9;}
+  50%{transform:translateY(-60vh) translateX(var(--fx,20px)) scale(0.6);opacity:0.6;}
+  100%{transform:translateY(-100vh) translateX(var(--fx2,40px)) scale(0.1);opacity:0;}
+}
 
-        .correct { background: #10b981 !important; color: white; border-color: #059669; font-weight: 900; }
-        .wrong { background: #ef4444 !important; color: white; border-color: #b91c1c; }
+/* LANTERNS */
+.lanterns-wrap{position:fixed;top:0;width:100%;z-index:10;pointer-events:none;display:flex;justify-content:space-between;padding:0 10px;}
+.lantern{display:flex;flex-direction:column;align-items:center;transform-origin:top center;}
+.lantern.L{animation:swL 3.5s ease-in-out infinite;}
+.lantern.R{animation:swR 3.2s ease-in-out infinite;}
+@keyframes swL{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+@keyframes swR{0%,100%{transform:rotate(8deg)}50%{transform:rotate(-8deg)}}
+.l-wire{width:1px;height:50px;background:linear-gradient(to bottom,rgba(201,168,76,0.6),transparent);}
+.l-cap{width:24px;height:7px;background:linear-gradient(180deg,var(--gold2),var(--gold3));border-radius:3px 3px 0 0;}
+.l-body{
+  width:22px;height:34px;
+  background:linear-gradient(180deg,rgba(255,220,100,0.95),rgba(201,168,76,0.7));
+  border-radius:4px 4px 9px 9px;position:relative;overflow:hidden;
+  animation:lGlow 2.5s ease-in-out infinite;
+}
+.l-body::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0,transparent 3px,rgba(0,0,0,0.1) 3px,rgba(0,0,0,0.1) 4px);}
+.l-tail{width:1px;height:10px;background:rgba(201,168,76,0.4);}
+@keyframes lGlow{
+  0%,100%{box-shadow:0 0 14px 5px rgba(255,180,0,0.7),0 0 30px rgba(255,150,0,0.4);}
+  50%{box-shadow:0 0 22px 9px rgba(255,200,0,0.95),0 0 50px rgba(255,120,0,0.6);}
+}
 
-        .timer-line { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            height: 5px; 
-            background: linear-gradient(to left, #d4af37, #f59e0b); 
-            width: 100%; 
-            transition: width 1s linear; 
-            z-index: 100;
-        }
+/* MAIN CARD */
+.login-wrap{position:relative;z-index:20;width:100%;max-width:390px;padding:0 16px;}
+.card{
+  background:linear-gradient(160deg,rgba(18,8,2,0.95),rgba(8,3,0,0.98));
+  border:1px solid rgba(201,168,76,0.35);
+  border-radius:28px;padding:40px 28px 36px;
+  box-shadow:
+    0 0 0 1px rgba(201,168,76,0.06) inset,
+    0 40px 100px rgba(0,0,0,0.9),
+    0 0 80px rgba(255,80,0,0.08),
+    0 0 40px rgba(201,168,76,0.06);
+  position:relative;overflow:hidden;
+  animation:cardEntrance 0.8s cubic-bezier(0.175,0.885,0.32,1.275) both;
+}
+@keyframes cardEntrance{
+  from{transform:scale(0.8) translateY(40px);opacity:0;}
+  to{transform:scale(1) translateY(0);opacity:1;}
+}
+.card::before{
+  content:'';position:absolute;top:0;left:15%;right:15%;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold2),var(--ember3),var(--gold2),transparent);
+  animation:topLineShimmer 3s ease-in-out infinite;
+}
+@keyframes topLineShimmer{
+  0%,100%{opacity:0.6;} 50%{opacity:1;}
+}
+.card-glow-tl{position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(201,168,76,0.1),transparent 70%);pointer-events:none;border-radius:50%;}
+.card-glow-br{position:absolute;bottom:-50px;left:-50px;width:160px;height:160px;background:radial-gradient(circle,rgba(255,69,0,0.08),transparent 70%);pointer-events:none;border-radius:50%;}
 
-        /* شاشة النتيجة */
-        #result-screen {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: #0a0e17;
-            z-index: 9999;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            text-align: center;
-        }
-    </style>
+/* LOGO */
+.logo-zone{display:flex;justify-content:center;margin-bottom:22px;position:relative;}
+.logo-outer{
+  position:relative;width:96px;height:96px;
+  animation:logoFloat 3s ease-in-out infinite;
+}
+@keyframes logoFloat{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-8px);}
+}
+.logo-ring-svg{position:absolute;inset:-6px;animation:ringRotate 4s linear infinite;}
+@keyframes ringRotate{to{transform:rotate(360deg);}}
+.logo-img-wrap{
+  width:96px;height:96px;border-radius:50%;
+  background:radial-gradient(circle,#1a0800,#000);
+  border:2px solid rgba(201,168,76,0.3);
+  overflow:hidden;
+  box-shadow:0 0 30px rgba(255,100,0,0.3),0 0 60px rgba(201,168,76,0.15);
+}
+.logo-img-wrap img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.logo-dot{position:absolute;bottom:4px;right:4px;width:16px;height:16px;background:#22C55E;border-radius:50%;border:2px solid #000;box-shadow:0 0 8px rgba(34,197,94,0.7);}
+
+/* TITLE TYPEWRITER */
+.title-wrap{text-align:center;margin-bottom:6px;}
+.title-main{
+  font-family:'Tajawal',sans-serif;
+  font-size:28px;font-weight:900;
+  background:linear-gradient(135deg,#F0C96B 0%,#FF6B00 40%,#F0C96B 70%,#C9A84C 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  background-size:200% auto;
+  animation:titleShimmer 3s linear infinite;
+  display:inline-block;
+}
+@keyframes titleShimmer{to{background-position:200% center;}}
+.title-sub{
+  text-align:center;font-size:11px;color:rgba(201,168,76,0.45);
+  font-weight:700;letter-spacing:4px;margin-bottom:26px;
+}
+
+/* DIVIDER */
+.divider{display:flex;align-items:center;gap:10px;margin-bottom:24px;}
+.div-line{flex:1;height:1px;}
+.div-l{background:linear-gradient(to right,transparent,rgba(201,168,76,0.4));}
+.div-r{background:linear-gradient(to left,transparent,rgba(201,168,76,0.4));}
+.div-icon{color:rgba(255,107,0,0.7);font-size:16px;}
+
+/* INPUT */
+.inp-label{font-size:11px;font-weight:700;color:rgba(201,168,76,0.55);letter-spacing:1px;margin-bottom:8px;display:block;}
+.inp-wrap{position:relative;margin-bottom:18px;}
+.code-inp{
+  width:100%;background:rgba(4,2,0,0.8);
+  border:1px solid rgba(201,168,76,0.2);
+  border-radius:14px;padding:15px 18px;
+  color:var(--gold2);font-family:'Cairo',sans-serif;
+  font-size:20px;font-weight:900;text-align:center;
+  letter-spacing:8px;outline:none;transition:all 0.3s;
+}
+.code-inp:focus{
+  border-color:rgba(201,168,76,0.7);
+  box-shadow:0 0 0 3px rgba(201,168,76,0.08),0 0 30px rgba(201,168,76,0.12),0 0 60px rgba(255,69,0,0.06);
+}
+.code-inp::placeholder{color:rgba(201,168,76,0.2);letter-spacing:3px;font-size:14px;}
+
+/* LOGIN BTN */
+.login-btn{
+  width:100%;padding:16px;border:none;border-radius:14px;cursor:none;
+  font-family:'Cairo',sans-serif;font-size:17px;font-weight:900;
+  position:relative;overflow:hidden;
+  background:linear-gradient(90deg,#6B3D00,#C9A84C,#FF6B00,#F0C96B,#C9A84C,#6B3D00);
+  background-size:300% 100%;
+  color:#0a0300;
+  box-shadow:0 4px 30px rgba(201,168,76,0.4),0 0 60px rgba(255,69,0,0.1),0 1px 0 rgba(255,255,255,0.1) inset;
+  animation:btnFlow 4s linear infinite;
+  transition:transform 0.2s,box-shadow 0.2s;
+}
+@keyframes btnFlow{to{background-position:-300% 0;}}
+.login-btn:hover{transform:translateY(-2px) scale(1.01);box-shadow:0 8px 40px rgba(201,168,76,0.6),0 0 80px rgba(255,69,0,0.2);}
+.login-btn:active{transform:scale(0.98);}
+.login-btn::after{
+  content:'';position:absolute;top:0;left:-100%;width:50%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.3),transparent);
+  animation:btnSweep 2.5s ease-in-out infinite;
+}
+@keyframes btnSweep{0%{left:-100%;}60%,100%{left:150%;}}
+
+/* NEON WAVE ON BTN */
+.btn-wave{
+  position:absolute;bottom:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,rgba(255,200,0,0.8),rgba(255,100,0,0.8),transparent);
+  animation:waveMove 1.5s linear infinite;
+}
+@keyframes waveMove{0%{transform:translateX(-100%);}100%{transform:translateX(100%);}}
+
+/* ERROR */
+.err-msg{text-align:center;font-size:13px;font-weight:700;color:#F87171;margin-top:12px;display:none;animation:errShake 0.4s ease;}
+@keyframes errShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-6px);}75%{transform:translateX(6px);}}
+
+/* INSTALL OVERLAY */
+#install-overlay{
+  position:fixed;inset:0;background:rgba(0,0,8,0.97);z-index:9999;
+  display:none;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(20px);
+}
+.inst-card{
+  background:linear-gradient(160deg,rgba(18,8,2,0.97),rgba(8,3,0,0.99));
+  border:1px solid rgba(201,168,76,0.4);border-radius:28px;
+  padding:38px 28px;width:100%;max-width:360px;text-align:center;
+  position:relative;overflow:hidden;
+  box-shadow:0 0 100px rgba(255,80,0,0.15),0 40px 80px rgba(0,0,0,0.9);
+  animation:cardEntrance 0.5s cubic-bezier(0.175,0.885,0.32,1.275) both;
+}
+.inst-card::before{content:'';position:absolute;top:0;left:15%;right:15%;height:2px;background:linear-gradient(90deg,transparent,var(--gold2),var(--ember3),var(--gold2),transparent);}
+.inst-btn-ok{
+  width:100%;padding:15px;border:none;border-radius:14px;cursor:none;
+  font-family:'Cairo',sans-serif;font-size:16px;font-weight:900;
+  background:linear-gradient(135deg,#064e3b,#10B981);color:white;
+  margin-bottom:12px;box-shadow:0 4px 24px rgba(16,185,129,0.4);
+  transition:all 0.2s;
+}
+.inst-btn-ok:hover{transform:translateY(-2px);box-shadow:0 8px 32px rgba(16,185,129,0.6);}
+.inst-btn-skip{color:rgba(255,255,255,0.25);font-size:12px;font-weight:700;background:none;border:none;cursor:none;font-family:'Cairo',sans-serif;text-decoration:underline;transition:color 0.2s;}
+.inst-btn-skip:hover{color:rgba(255,255,255,0.5);}
+</style>
 </head>
-<body class="p-6">
+<body>
 
-    <div id="t-bar" class="timer-line"></div>
+<!-- CUSTOM CURSOR -->
+<div id="cursor">
+  <svg width="20" height="20" viewBox="0 0 20 20">
+    <polygon points="10,1 12,7 18,7 13,11 15,17 10,13 5,17 7,11 2,7 8,7" fill="none" stroke="#F0C96B" stroke-width="1.5" stroke-linejoin="round"/>
+  </svg>
+</div>
+<div id="cursor-ring"></div>
 
-    <div class="max-w-md mx-auto flex flex-col h-screen">
-        
-        <div class="flex justify-between items-center mt-6 mb-12">
-            <div class="flex gap-3">
-                <div id="btn-50" onclick="use5050()" class="help-btn text-purple-400">
-                    <i class="fas fa-cut text-xl"></i>
-                </div>
-                <div id="btn-freeze" onclick="useFreeze()" class="help-btn text-blue-400">
-                    <i class="fas fa-snowflake text-xl"></i>
-                </div>
-            </div>
+<!-- CANVAS BG -->
+<canvas id="bgCanvas"></canvas>
 
-            <div class="q-box">
-                <div class="text-[10px] text-gray-400 font-bold text-center uppercase tracking-widest">السؤال</div>
-                <div class="text-2xl font-black text-white"><span id="q-num">1</span><span class="text-yellow-500 mx-1">/</span><span class="text-gray-500 text-lg">15</span></div>
-            </div>
+<!-- METEORS -->
+<div class="meteor" style="--left:10%;--top:-5%;--dur:4s;--delay:0s;"></div>
+<div class="meteor" style="--left:25%;--top:-8%;--dur:5s;--delay:1.2s;"></div>
+<div class="meteor" style="--left:60%;--top:-3%;--dur:3.5s;--delay:0.5s;"></div>
+<div class="meteor" style="--left:80%;--top:-10%;--dur:4.5s;--delay:2s;"></div>
+<div class="meteor" style="--left:45%;--top:-6%;--dur:6s;--delay:0.8s;"></div>
+<div class="meteor" style="--left:90%;--top:-4%;--dur:3.8s;--delay:1.8s;"></div>
+
+<!-- FIRE PARTICLES -->
+<div class="fire-p" style="--fl:15%;--fs:5px;--fr:3s;--fd:0s;--fx:30px;--fx2:60px;"></div>
+<div class="fire-p" style="--fl:30%;--fs:7px;--fr:2.5s;--fd:0.5s;--fx:-20px;--fx2:-50px;"></div>
+<div class="fire-p" style="--fl:50%;--fs:4px;--fr:3.5s;--fd:1s;--fx:40px;--fx2:20px;"></div>
+<div class="fire-p" style="--fl:70%;--fs:6px;--fr:2.8s;--fd:0.3s;--fx:-30px;--fx2:-60px;"></div>
+<div class="fire-p" style="--fl:85%;--fs:5px;--fr:4s;--fd:0.8s;--fx:20px;--fx2:50px;"></div>
+<div class="fire-p" style="--fl:5%;--fs:4px;--fr:3.2s;--fd:1.5s;--fx:15px;--fx2:35px;"></div>
+<div class="fire-p" style="--fl:95%;--fs:6px;--fr:2.6s;--fd:0.2s;--fx:-40px;--fx2:-80px;"></div>
+
+<!-- LANTERNS -->
+<div class="lanterns-wrap">
+  <div class="lantern L"><div class="l-wire"></div><div class="l-cap"></div><div class="l-body"></div><div class="l-tail"></div></div>
+  <div class="lantern R"><div class="l-wire"></div><div class="l-cap"></div><div class="l-body"></div><div class="l-tail"></div></div>
+</div>
+
+<!-- LOGIN CARD -->
+<div class="login-wrap" id="login-container">
+  <div class="card">
+    <div class="card-glow-tl"></div>
+    <div class="card-glow-br"></div>
+
+    <!-- LOGO -->
+    <div class="logo-zone">
+      <div class="logo-outer">
+        <svg class="logo-ring-svg" viewBox="0 0 108 108" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="54" cy="54" r="50" stroke="url(#ringGrad)" stroke-width="2" stroke-dasharray="8 4" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="ringGrad" x1="0" y1="0" x2="108" y2="108" gradientUnits="userSpaceOnUse">
+              <stop offset="0%" stop-color="#F0C96B"/>
+              <stop offset="40%" stop-color="#FF6B00"/>
+              <stop offset="80%" stop-color="#C9A84C"/>
+              <stop offset="100%" stop-color="#F0C96B"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="logo-img-wrap">
+          <img src="https://i.postimg.cc/QN7YYDZb/1772330473684.png" alt="logo">
         </div>
-
-        <div class="flex-grow flex flex-col justify-center mb-10">
-            <div id="q-area" class="text-center">
-                <h2 id="q-text" class="text-2xl font-black leading-relaxed">جاري استدعاء المواجهة...</h2>
-            </div>
-        </div>
-
-        <div id="options-grid" class="grid grid-cols-1 gap-4 mb-8">
-            </div>
+        <div class="logo-dot"></div>
+      </div>
     </div>
 
-    <div id="result-screen">
-        <div class="w-24 h-24 bg-yellow-500 rounded-full flex items-center justify-center mb-6 shadow-[0_0_50px_rgba(212,175,55,0.3)]">
-            <i class="fas fa-trophy text-black text-4xl"></i>
-        </div>
-        <h2 class="text-3xl font-black mb-2 text-white">انتهت المواجهة!</h2>
-        <p class="text-gray-400 font-bold mb-10">أداء بطل، إليك ما حققته:</p>
-        
-        <div class="glass w-full p-8 rounded-3xl border border-yellow-500/20 mb-12">
-            <span class="text-xs text-gray-500 block mb-2 font-bold uppercase tracking-widest">مجموع النقاط</span>
-            <span id="final-score" class="text-7xl font-black text-yellow-500">0</span>
-        </div>
+    <!-- TITLE -->
+    <div class="title-wrap">
+      <h1 class="title-main" id="mainTitle">ملعب رمضان</h1>
+    </div>
+    <p class="title-sub">✦ التحدي الأكبر ✦</p>
 
-        <button onclick="window.location.href='index.html'" class="w-full bg-yellow-500 text-black font-black py-5 rounded-2xl shadow-xl active:scale-95 transition-transform">
-            العودة للملعب <i class="fas fa-arrow-left mr-2"></i>
-        </button>
+    <!-- DIVIDER -->
+    <div class="divider">
+      <div class="div-line div-l"></div>
+      <span class="div-icon">🔥</span>
+      <div class="div-line div-r"></div>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <!-- INPUT -->
+    <label class="inp-label">🔑 كود الدخول</label>
+    <div class="inp-wrap">
+      <input type="password" id="login-pass" class="code-inp" placeholder="• • • • • •" onkeydown="if(event.key==='Enter')loginUser()">
+    </div>
 
-    <script>
-        const firebaseConfig = { 
-            apiKey: "AIzaSyBZMnIJ_IOqeAfXqFt-m4tM1Lvo0tUDnk8", 
-            projectId: "ramadan-87817"
-        };
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    <!-- BTN -->
+    <button onclick="loginUser()" id="login-btn" class="login-btn">
+      <div class="btn-wave"></div>
+      دخول الملعب ⚽
+    </button>
+    <p id="error-msg" class="err-msg"></p>
+  </div>
+</div>
 
-        let questions = [];
-        let currentIdx = 0;
-        let score = 0;
-        let timer;
-        let timeLeft = 15;
-        let isPaused = false;
-        let used50 = false;
-        let usedFreeze = false;
+<!-- INSTALL OVERLAY -->
+<div id="install-overlay">
+  <div class="inst-card">
+    <div class="card-glow-tl"></div>
+    <div class="logo-zone" style="margin-bottom:14px;">
+      <div class="logo-outer" style="animation:logoFloat 3s ease-in-out infinite;">
+        <div class="logo-img-wrap"><img src="https://i.postimg.cc/QN7YYDZb/1772330473684.png" alt="logo"></div>
+      </div>
+    </div>
+    <h2 style="font-size:22px;font-weight:900;color:white;margin-bottom:8px;font-family:'Tajawal',sans-serif;">ثبّت التطبيق! 🚀</h2>
+    <p style="color:rgba(255,255,255,0.4);font-size:13px;font-weight:700;margin-bottom:28px;line-height:1.8;">عشان تدخل الملعب علطول المرة الجاية<br>وتلعب بدون تقطيع</p>
+    <button onclick="triggerInstall()" class="inst-btn-ok">تثبيت الآن ✨</button>
+    <button onclick="goToDashboard()" class="inst-btn-skip">متابعة بدون تثبيت (مرة واحدة)</button>
+  </div>
+</div>
 
-        async function initQuiz() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const day = urlParams.get('day');
-            
-            try {
-                // التأكد من حالة الجولة
-                const settings = await db.collection("settings").doc("global_status").get();
-                const config = settings.data();
-                
-                if (!config || config.currentDay != day || config.status !== 'active') {
-                    alert("عفواً، هذه الجولة غير متاحة حالياً!");
-                    window.location.href = 'index.html';
-                    return;
-                }
+<script>
+// CURSOR
+const cursor = document.getElementById('cursor');
+const cursorRing = document.getElementById('cursor-ring');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+  cursorRing.style.left = e.clientX + 'px';
+  cursorRing.style.top = e.clientY + 'px';
+});
+document.addEventListener('mousedown', () => {
+  cursor.style.transform = 'translate(-50%,-50%) scale(0.7)';
+  cursorRing.style.transform = 'translate(-50%,-50%) scale(1.4)';
+  cursorRing.style.borderColor = 'rgba(255,107,0,0.8)';
+});
+document.addEventListener('mouseup', () => {
+  cursor.style.transform = 'translate(-50%,-50%) scale(1)';
+  cursorRing.style.transform = 'translate(-50%,-50%) scale(1)';
+  cursorRing.style.borderColor = 'rgba(201,168,76,0.5)';
+});
 
-                // سحب الأسئلة
-                const quizDoc = await db.collection("quizzes_pool").doc(`day_${day}`).get();
-                if (quizDoc.exists) {
-                    const data = quizDoc.data();
-                    // قراءة ذكية للداتا سواء في variations أو مباشرة
-                    questions = data.variations?.["0"]?.questions || data["variations.0"]?.questions || [];
-                    
-                    if (questions.length > 0) {
-                        renderQuestion();
-                    } else {
-                        alert("لا توجد أسئلة مضافة لهذه الجولة!");
-                    }
-                }
-            } catch (error) {
-                console.error(error);
-                alert("حدث خطأ في الاتصال، حاول مجدداً.");
-            }
-        }
+// CANVAS — stars + moon
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
 
-        function renderQuestion() {
-            if (currentIdx >= questions.length) return showResult();
-            
-            isPaused = false;
-            timeLeft = 15;
-            const q = questions[currentIdx];
-            
-            document.getElementById('q-num').innerText = currentIdx + 1;
-            document.getElementById('q-text').innerText = q.q;
-            
-            const grid = document.getElementById('options-grid');
-            grid.innerHTML = "";
-            
-            q.options.forEach((opt, i) => {
-                grid.innerHTML += `
-                    <button onclick="checkAnswer(${i})" class="answer-btn">
-                        ${opt}
-                    </button>`;
-            });
+const stars = Array.from({length:180}, () => ({
+  x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+  r: Math.random()*1.6+0.2, phase: Math.random()*Math.PI*2,
+  speed: Math.random()*0.012+0.004, gold: Math.random()>0.8
+}));
 
-            startTimer();
-        }
+// Moon crescent
+function drawMoon(t) {
+  const mx = canvas.width*0.5, my = -30;
+  const pulse = Math.sin(t*0.4)*0.08+1;
+  ctx.save();
+  ctx.shadowBlur = 60+Math.sin(t*0.4)*20;
+  ctx.shadowColor = 'rgba(201,168,76,0.3)';
+  ctx.beginPath();
+  ctx.arc(mx, my+100, 90*pulse, 0, Math.PI*2);
+  const grd = ctx.createRadialGradient(mx-20,my+80,10,mx,my+100,90);
+  grd.addColorStop(0,'rgba(201,168,76,0.06)');
+  grd.addColorStop(1,'transparent');
+  ctx.fillStyle = grd;
+  ctx.fill();
+  ctx.restore();
+  // crescent shape
+  ctx.save();
+  ctx.shadowBlur = 20; ctx.shadowColor = 'rgba(240,201,107,0.6)';
+  ctx.beginPath(); ctx.arc(mx, my+100, 55*pulse, Math.PI*0.9, Math.PI*2.1);
+  ctx.strokeStyle = 'rgba(240,201,107,0.2)'; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.restore();
+}
 
-        function startTimer() {
-            clearInterval(timer);
-            const bar = document.getElementById('t-bar');
-            timer = setInterval(() => {
-                if (!isPaused) {
-                    timeLeft--;
-                    bar.style.width = (timeLeft / 15 * 100) + "%";
-                    if (timeLeft <= 0) {
-                        clearInterval(timer);
-                        checkAnswer(-1); // الوقت خلص
-                    }
-                }
-            }, 1000);
-        }
+function animate(t) {
+  t /= 1000;
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  // deep bg gradient
+  const bg = ctx.createRadialGradient(canvas.width*.5,canvas.height*.3,0,canvas.width*.5,canvas.height*.5,canvas.height);
+  bg.addColorStop(0,'rgba(20,5,0,0.4)');
+  bg.addColorStop(0.5,'rgba(8,3,0,0.6)');
+  bg.addColorStop(1,'rgba(0,0,8,0.8)');
+  ctx.fillStyle = bg; ctx.fillRect(0,0,canvas.width,canvas.height);
+  drawMoon(t);
+  stars.forEach(s => {
+    const op = 0.15+0.7*Math.abs(Math.sin(t*s.speed+s.phase));
+    ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    ctx.fillStyle = s.gold ? `rgba(201,168,76,${op})` : `rgba(255,255,255,${op})`;
+    ctx.fill();
+  });
+  requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
 
-        function useFreeze() {
-            if (usedFreeze) return;
-            usedFreeze = true;
-            isPaused = true;
-            document.getElementById('btn-freeze').style.opacity = "0.2";
-            setTimeout(() => { isPaused = false; }, 8000); // تجميد 8 ثواني
-        }
+// SOUND CLICK
+function playClick() {
+  try {
+    const ctx2 = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx2.createOscillator();
+    const gain = ctx2.createGain();
+    osc.connect(gain); gain.connect(ctx2.destination);
+    osc.frequency.setValueAtTime(800, ctx2.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(400, ctx2.currentTime+0.1);
+    gain.gain.setValueAtTime(0.15, ctx2.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx2.currentTime+0.15);
+    osc.start(); osc.stop(ctx2.currentTime+0.15);
+  } catch(e){}
+}
+document.querySelectorAll('button').forEach(b => b.addEventListener('click', playClick));
 
-        function use5050() {
-            if (used50) return;
-            used50 = true;
-            document.getElementById('btn-50').style.opacity = "0.2";
-            const correct = questions[currentIdx].correctIndex;
-            const btns = document.querySelectorAll('.answer-btn');
-            let removed = 0;
-            btns.forEach((btn, i) => {
-                if (i !== correct && removed < 2) {
-                    btn.style.visibility = "hidden";
-                    removed++;
-                }
-            });
-        }
-
-        async function checkAnswer(selectedIdx) {
-            clearInterval(timer);
-            const q = questions[currentIdx];
-            const btns = document.querySelectorAll('.answer-btn');
-            
-            // إظهار الإجابة الصحيحة
-            btns[q.correctIndex].classList.add('correct');
-            
-            if (selectedIdx === q.correctIndex) {
-                score++;
-            } else if (selectedIdx !== -1) {
-                btns[selectedIdx].classList.add('wrong');
-            }
-
-            setTimeout(() => {
-                currentIdx++;
-                renderQuestion();
-            }, 1200);
-        }
-
-        async function showResult() {
-            const pass = localStorage.getItem('user_pass');
-            const day = new URLSearchParams(window.location.search).get('day');
-            
-            // تحديث نقاط المستخدم في الداتابيز
-            const userSnap = await db.collection("users").where("password", "==", pass).get();
-            if(!userSnap.empty) {
-                const userRef = userSnap.docs[0].ref;
-                await userRef.update({
-                    score: firebase.firestore.FieldValue.increment(score)
-                });
-                // تسجيل اللوج
-                await userRef.collection("game_logs").doc(`day_${day}`).set({
-                    day: day,
-                    score: score,
-                    time: Date.now()
-                });
-            }
-
-            document.getElementById('final-score').innerText = score;
-            document.getElementById('result-screen').style.display = 'flex';
-        }
-
-        initQuiz();
-    </script>
-</body>
-    </html>
-    
+// PROTECTION
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (e.keyCode===123||(e.ctrlKey&&['u','i','j','c','s'].includes(e.key.toLowerCase()))) { e.preventDefault(); return false; }
+});
+</script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script>
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+const firebaseConfig = {apiKey:"AIzaSyBZMnIJ_IOqeAfXqFt-m4tM1Lvo0tUDnk8",projectId:"ramadan-87817",appId:"1:343525703258:web:6776b4857425df8bcca263"};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const isApp = window.ma
